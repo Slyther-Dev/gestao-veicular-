@@ -62,6 +62,112 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
 
+  <!-- AUTH SCREEN: LOGIN / CADASTRO / PRIMEIRO ACESSO -->
+  <div id="authScreen" class="fixed inset-0 z-[100] bg-slate-950 overflow-y-auto flex items-center justify-center p-4">
+    <div class="w-full max-w-md py-6">
+      <div class="flex items-center justify-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 text-2xl">
+          <i class="fa-solid fa-car-side"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-xl leading-tight tracking-tight text-white">AutoDrive <span class="bg-sky-500/10 text-sky-400 text-xs px-2 py-0.5 rounded-full border border-sky-500/20 font-semibold align-middle">DMS ERP</span></h1>
+          <p class="text-xs text-slate-400">Acesso restrito à equipe da loja</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+        <!-- Tabs -->
+        <div id="authTabs" class="grid grid-cols-2 text-xs font-semibold border-b border-slate-800">
+          <button type="button" id="authTabLogin" onclick="showAuthMode('login')" class="py-3 transition-all">Entrar</button>
+          <button type="button" id="authTabRegister" onclick="showAuthMode('register')" class="py-3 transition-all">Criar conta</button>
+        </div>
+
+        <!-- LOGIN -->
+        <form id="formLogin" onsubmit="handleLogin(event)" class="p-6 space-y-4 text-xs" autocomplete="on">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">E-mail</label>
+            <input type="email" id="loginEmail" required autocomplete="username" placeholder="voce@autodrive.com.br" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Senha</label>
+            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Sua senha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div id="loginMsg" class="hidden p-3 rounded-xl text-[11px] leading-relaxed"></div>
+          <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-sky-600/20">
+            <i class="fa-solid fa-right-to-bracket mr-1"></i> Entrar
+          </button>
+          <p class="text-[10px] text-slate-500 text-center">Esqueceu a senha? Peça ao Dono da loja para redefinir.</p>
+        </form>
+
+        <!-- CADASTRO -->
+        <form id="formRegister" onsubmit="handleRegister(event)" class="hidden p-6 space-y-4 text-xs" autocomplete="off">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Nome completo</label>
+            <input type="text" id="regName" required maxlength="60" placeholder="Seu nome" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">E-mail</label>
+            <input type="email" id="regEmail" required maxlength="80" placeholder="voce@autodrive.com.br" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Cargo desejado</label>
+            <select id="regRequestedRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+              <option value="vendedor">Vendedor</option>
+              <option value="admin">Gerente</option>
+            </select>
+            <p class="text-[10px] text-slate-500 mt-1">É apenas um pedido: quem define o cargo final é o Dono da loja.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Senha</label>
+              <input type="password" id="regPassword" required minlength="8" autocomplete="new-password" placeholder="Mín. 8 caracteres" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Confirmar senha</label>
+              <input type="password" id="regPassword2" required minlength="8" autocomplete="new-password" placeholder="Repita a senha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+          <div id="registerMsg" class="hidden p-3 rounded-xl text-[11px] leading-relaxed"></div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-600/20">
+            <i class="fa-solid fa-user-plus mr-1"></i> Solicitar acesso
+          </button>
+          <p class="text-[10px] text-slate-500 text-center">Seu acesso só é liberado depois que o Dono aprovar o cadastro.</p>
+        </form>
+
+        <!-- PRIMEIRO ACESSO: CONFIGURAR DONO -->
+        <form id="formSetup" onsubmit="handleSetupOwner(event)" class="hidden p-6 space-y-4 text-xs" autocomplete="off">
+          <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-[11px] leading-relaxed">
+            <strong class="block text-sky-200 mb-0.5"><i class="fa-solid fa-crown mr-1"></i>Primeiro acesso</strong>
+            Defina a conta do <strong>Dono da loja (Super Admin)</strong>. Depois você aprova a equipe e define os cargos na aba <em>Membros &amp; Cargos</em>.
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Nome do Dono</label>
+            <input type="text" id="setupName" required maxlength="60" placeholder="Seu nome" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">E-mail</label>
+            <input type="email" id="setupEmail" required maxlength="80" placeholder="dono@autodrive.com.br" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Senha</label>
+              <input type="password" id="setupPassword" required minlength="8" autocomplete="new-password" placeholder="Mín. 8 caracteres" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">Confirmar senha</label>
+              <input type="password" id="setupPassword2" required minlength="8" autocomplete="new-password" placeholder="Repita a senha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+          <div id="setupMsg" class="hidden p-3 rounded-xl text-[11px] leading-relaxed"></div>
+          <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-sky-600/20">
+            <i class="fa-solid fa-shield-halved mr-1"></i> Criar conta do Dono e entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
   <!-- TOP HEADER / NAVBAR -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
     <!-- Brand Logo -->
@@ -75,14 +181,6 @@
         </h1>
         <p class="text-xs text-slate-400">Gestão Inteligente & Mercado FIPE</p>
       </div>
-    </div>
-
-    <!-- Quick Role Switcher (Simulação para Teste Ágil) -->
-    <div class="flex items-center bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 text-xs gap-1">
-      <span class="text-slate-400 font-medium px-2 hidden sm:inline"><i class="fa-solid fa-user-gear mr-1"></i>Perfil Atual:</span>
-      <button onclick="switchUserRole('super_admin')" id="roleBtn-super_admin" class="px-2.5 py-1 rounded-lg font-medium transition-all">Super ADM</button>
-      <button onclick="switchUserRole('admin')" id="roleBtn-admin" class="px-2.5 py-1 rounded-lg font-medium transition-all">Gerente ADM</button>
-      <button onclick="switchUserRole('vendedor')" id="roleBtn-vendedor" class="px-2.5 py-1 rounded-lg font-medium transition-all">Vendedor</button>
     </div>
 
     <!-- Network Security & Market Status Badges -->
@@ -108,7 +206,7 @@
           <div id="userName" class="text-xs font-semibold text-slate-200">Carlos Silveira</div>
           <div id="userRoleBadge" class="text-[10px] text-sky-400 font-medium">Super Admin</div>
         </div>
-        <button onclick="simulateLogout()" title="Sair / Login" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg transition-colors">
+        <button onclick="logout()" title="Sair" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg transition-colors">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
@@ -136,6 +234,7 @@
         <button onclick="switchTab('members')" id="nav-members" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
           <i class="fa-solid fa-users-gear text-base"></i>
           <span>Membros & Cargos</span>
+          <span id="pendingBadge" class="hidden ml-auto bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
         </button>
         <button onclick="switchTab('security')" id="nav-security" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
           <i class="fa-solid fa-shield-halved text-base"></i>
@@ -900,6 +999,11 @@
         </div>
 
         <div>
+          <label class="block text-slate-400 font-medium mb-1">Senha provisória</label>
+          <input type="password" id="memPassword" required minlength="8" autocomplete="new-password" placeholder="Mín. 8 caracteres" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
           <label class="block text-slate-400 font-medium mb-1">Nível de Permissão (Cargo)</label>
           <select id="memRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
             <option value="vendedor">Membro Vendedor (Restrito)</option>
@@ -916,6 +1020,33 @@
         <div class="pt-3 flex justify-end gap-2">
           <button type="button" onclick="closeModal('modalMember')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium">Cancelar</button>
           <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-5 py-2 rounded-xl transition-all">Salvar Membro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REDEFINIR SENHA (Dono) -->
+  <div id="modalResetPass" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-key text-amber-400"></i>
+          Definir Nova Senha
+        </h3>
+        <button onclick="closeModal('modalResetPass')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <form onsubmit="saveResetPassword(event)" class="p-6 space-y-4 text-xs" autocomplete="off">
+        <input type="hidden" id="resetMemberId">
+        <p class="text-slate-400 leading-relaxed">Nova senha para <strong id="resetMemberName" class="text-white"></strong>. Informe a senha ao funcionário e peça para ele guardá-la.</p>
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Nova senha</label>
+          <input type="password" id="resetNewPassword" required minlength="8" autocomplete="new-password" placeholder="Mín. 8 caracteres" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalResetPass')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium">Cancelar</button>
+          <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-5 py-2 rounded-xl transition-all">Salvar Senha</button>
         </div>
       </form>
     </div>
@@ -1153,7 +1284,7 @@
     }
 
     function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...appData, currentUser: null }));
     }
 
     // --- CHART INSTANCES ---
@@ -1162,12 +1293,6 @@
 
     // --- INIT APP ON DOM LOAD ---
     window.onload = function() {
-      updateUserUI();
-      renderDashboard();
-      renderInventory();
-      renderSales();
-      renderMembers();
-      renderSecurityLogs();
       startTotpTimer();
 
       // Ensure responsiveness for charts
@@ -1175,6 +1300,9 @@
         if (chartComparisonInstance) chartComparisonInstance.resize();
         if (chartStatusInstance) chartStatusInstance.resize();
       });
+
+      // Nada do sistema é exibido antes do login
+      initAuth();
     };
 
     // --- TAB SWITCHING LOGIC ---
@@ -1199,50 +1327,352 @@
       }
     }
 
-    // --- USER ROLE SWITCHING & RBAC LOGIC ---
-    function switchUserRole(role) {
-      if (role === 'super_admin') {
-        appData.currentUser = { id: 'usr_1', name: 'Carlos Silveira', email: 'carlos@autodrive.com.br', role: 'super_admin' };
-      } else if (role === 'admin') {
-        appData.currentUser = { id: 'usr_2', name: 'Roberto Mendes', email: 'roberto@autodrive.com.br', role: 'admin' };
-      } else {
-        appData.currentUser = { id: 'usr_3', name: 'Juliana Lima', email: 'juliana@autodrive.com.br', role: 'vendedor' };
-      }
+    // =====================================================================
+    // AUTENTICAÇÃO: LOGIN / CADASTRO / SESSÃO
+    // Obs.: os dados ficam no navegador (localStorage). Para segurança real
+    // em produção, a autenticação precisa ser feita em um servidor.
+    // =====================================================================
+    const SESSION_KEY = 'autodrive_dms_session_v1';
+    const MIN_PASSWORD = 8;
+    let loginFailures = 0;
+    let loginLockUntil = 0;
 
-      saveState();
-      updateUserUI();
-      renderDashboard();
-      renderInventory();
-      renderMembers();
-      
-      logAction('Troca de Perfil', `Perfil alternado para ${appData.currentUser.role.toUpperCase()}`);
+    // --- Utilidades de segurança ---
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+    // SHA-256 em JS puro (funciona em file://, http e https de forma idêntica)
+    function sha256Hex(str) {
+      const K = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+      ];
+      const bytes = Array.from(new TextEncoder().encode(str));
+      const bitLen = bytes.length * 8;
+      bytes.push(0x80);
+      while (bytes.length % 64 !== 56) bytes.push(0);
+      const hi = Math.floor(bitLen / 0x100000000), lo = bitLen >>> 0;
+      bytes.push((hi >>> 24) & 255, (hi >>> 16) & 255, (hi >>> 8) & 255, hi & 255,
+                 (lo >>> 24) & 255, (lo >>> 16) & 255, (lo >>> 8) & 255, lo & 255);
+
+      let h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+      const w = new Array(64);
+      const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+
+      for (let i = 0; i < bytes.length; i += 64) {
+        for (let t = 0; t < 16; t++) {
+          w[t] = (bytes[i + 4 * t] << 24) | (bytes[i + 4 * t + 1] << 16) | (bytes[i + 4 * t + 2] << 8) | bytes[i + 4 * t + 3];
+        }
+        for (let t = 16; t < 64; t++) {
+          const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+          const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+          w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
+        }
+        let [a, b, c, d, e, f, g, hh] = h;
+        for (let t = 0; t < 64; t++) {
+          const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+          const ch = (e & f) ^ (~e & g);
+          const t1 = (hh + S1 + ch + K[t] + w[t]) | 0;
+          const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+          const maj = (a & b) ^ (a & c) ^ (b & c);
+          const t2 = (S0 + maj) | 0;
+          hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+        }
+        h = [(h[0] + a) | 0, (h[1] + b) | 0, (h[2] + c) | 0, (h[3] + d) | 0, (h[4] + e) | 0, (h[5] + f) | 0, (h[6] + g) | 0, (h[7] + hh) | 0];
+      }
+      return h.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+    }
+
+    function randomSalt() {
+      const arr = new Uint8Array(16);
+      if (window.crypto && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+      } else {
+        for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+      }
+      return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function hashPassword(password, salt) {
+      let h = sha256Hex(salt + ':' + password);
+      for (let i = 0; i < 2000; i++) h = sha256Hex(h + salt);
+      return h;
+    }
+
+    function setMemberPassword(member, password) {
+      member.salt = randomSalt();
+      member.passHash = hashPassword(password, member.salt);
+    }
+
+    function formatNow() {
+      return new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    function isOwner() {
+      return !!appData.currentUser && appData.currentUser.role === 'super_admin';
+    }
+
+    function countActiveOwners(excludeId) {
+      return appData.members.filter(m => m.role === 'super_admin' && m.status === 'active' && m.id !== excludeId).length;
+    }
+
+    // --- Mensagens nos formulários ---
+    function showAuthMsg(id, text, type) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!text) { el.classList.add('hidden'); el.textContent = ''; return; }
+      const styles = {
+        error: 'bg-rose-500/10 border border-rose-500/30 text-rose-300',
+        success: 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300',
+        info: 'bg-amber-500/10 border border-amber-500/30 text-amber-300'
+      };
+      el.className = 'p-3 rounded-xl text-[11px] leading-relaxed ' + (styles[type] || styles.error);
+      el.textContent = text;
+    }
+
+    // --- Migração de dados antigos e inicialização ---
+    function migrateMembers() {
+      appData.members.forEach(m => {
+        if (!m.status) m.status = (m.active === false) ? 'blocked' : 'active';
+        delete m.active;
+      });
+      saveState();
+    }
+
+    function needsOwnerSetup() {
+      return !appData.members.some(m => m.role === 'super_admin' && m.passHash);
+    }
+
+    function initAuth() {
+      appData.currentUser = null;
+      migrateMembers();
+
+      let member = null;
+      try {
+        const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+        if (sess && sess.id) member = appData.members.find(m => m.id === sess.id && m.status === 'active' && m.passHash) || null;
+      } catch (e) { member = null; }
+
+      if (member) {
+        enterApp(member, false);
+      } else {
+        showAuthScreen();
+      }
+    }
+
+    function showAuthScreen(notice) {
+      document.getElementById('authScreen').classList.remove('hidden');
+      ['loginEmail', 'loginPassword', 'regName', 'regEmail', 'regPassword', 'regPassword2', 'setupName', 'setupEmail', 'setupPassword', 'setupPassword2']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      ['loginMsg', 'registerMsg', 'setupMsg'].forEach(id => showAuthMsg(id, ''));
+      showAuthMode(needsOwnerSetup() ? 'setup' : 'login');
+      if (notice) showAuthMsg('loginMsg', notice, 'info');
+    }
+
+    function showAuthMode(mode) {
+      const forms = { login: 'formLogin', register: 'formRegister', setup: 'formSetup' };
+      Object.entries(forms).forEach(([key, id]) => {
+        document.getElementById(id).classList.toggle('hidden', key !== mode);
+      });
+      document.getElementById('authTabs').classList.toggle('hidden', mode === 'setup');
+
+      const active = 'bg-slate-800 text-white';
+      const inactive = 'text-slate-400 hover:text-white hover:bg-slate-800/50';
+      document.getElementById('authTabLogin').className = 'py-3 transition-all ' + (mode === 'login' ? active : inactive);
+      document.getElementById('authTabRegister').className = 'py-3 transition-all ' + (mode === 'register' ? active : inactive);
+    }
+
+    // --- Primeiro acesso: cria / configura o Dono ---
+    function handleSetupOwner(e) {
+      e.preventDefault();
+      const name = document.getElementById('setupName').value.trim();
+      const email = document.getElementById('setupEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('setupPassword').value;
+      const pass2 = document.getElementById('setupPassword2').value;
+
+      if (name.length < 3) return showAuthMsg('setupMsg', 'Informe o nome completo.', 'error');
+      if (pass.length < MIN_PASSWORD) return showAuthMsg('setupMsg', `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`, 'error');
+      if (pass !== pass2) return showAuthMsg('setupMsg', 'As senhas não conferem.', 'error');
+
+      let owner = appData.members.find(m => m.role === 'super_admin');
+      const emailTaken = appData.members.some(m => m.email.toLowerCase() === email && m !== owner);
+      if (emailTaken) return showAuthMsg('setupMsg', 'Este e-mail já está em uso por outro membro.', 'error');
+
+      if (!owner) {
+        owner = { id: 'usr_' + Date.now(), role: 'super_admin', req2fa: true, lastAccess: 'Nunca acessou' };
+        appData.members.push(owner);
+      }
+      owner.name = name;
+      owner.email = email;
+      owner.status = 'active';
+      setMemberPassword(owner, pass);
+      owner.lastAccess = formatNow();
+      saveState();
+
+      logAction('Cadastro', 'Conta do Dono da loja configurada no primeiro acesso', owner);
+      enterApp(owner, true);
+    }
+
+    // --- Cadastro de novos membros (fica pendente até o Dono aprovar) ---
+    function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const requested = document.getElementById('regRequestedRole').value === 'admin' ? 'admin' : 'vendedor';
+      const pass = document.getElementById('regPassword').value;
+      const pass2 = document.getElementById('regPassword2').value;
+
+      if (name.length < 3) return showAuthMsg('registerMsg', 'Informe seu nome completo.', 'error');
+      if (pass.length < MIN_PASSWORD) return showAuthMsg('registerMsg', `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`, 'error');
+      if (pass !== pass2) return showAuthMsg('registerMsg', 'As senhas não conferem.', 'error');
+      if (appData.members.some(m => m.email.toLowerCase() === email)) {
+        return showAuthMsg('registerMsg', 'Já existe um cadastro com este e-mail.', 'error');
+      }
+
+      const member = {
+        id: 'usr_' + Date.now(),
+        name: name,
+        email: email,
+        role: 'vendedor',          // sempre começa como vendedor; o Dono ajusta
+        requestedRole: requested,
+        req2fa: false,
+        status: 'pending',
+        lastAccess: 'Nunca acessou'
+      };
+      setMemberPassword(member, pass);
+      appData.members.push(member);
+      saveState();
+
+      logAction('Cadastro', `Novo cadastro aguardando aprovação: ${name} (${email})`, { name: name, role: 'anonimo' });
+
+      showAuthMode('login');
+      showAuthMsg('loginMsg', 'Cadastro enviado! Assim que o Dono da loja aprovar, você já poderá entrar com seu e-mail e senha.', 'success');
+    }
+
+    // --- Login ---
+    function handleLogin(e) {
+      e.preventDefault();
+      const msgId = 'loginMsg';
+      const now = Date.now();
+
+      if (now < loginLockUntil) {
+        const secs = Math.ceil((loginLockUntil - now) / 1000);
+        return showAuthMsg(msgId, `Muitas tentativas incorretas. Aguarde ${secs}s para tentar de novo.`, 'error');
+      }
+
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('loginPassword').value;
+      const member = appData.members.find(m => m.email.toLowerCase() === email);
+
+      if (member && !member.passHash) {
+        return showAuthMsg(msgId, 'Este usuário ainda não tem senha. Peça ao Dono da loja para definir uma senha provisória.', 'info');
+      }
+
+      const ok = member && hashPassword(pass, member.salt) === member.passHash;
+      if (!ok) {
+        loginFailures++;
+        logAction('Segurança', 'Tentativa de login com credenciais incorretas', { name: 'Desconhecido', role: 'anonimo' });
+        if (loginFailures >= 5) {
+          loginFailures = 0;
+          loginLockUntil = Date.now() + 30000;
+          return showAuthMsg(msgId, 'Muitas tentativas incorretas. Aguarde 30s para tentar de novo.', 'error');
+        }
+        return showAuthMsg(msgId, 'E-mail ou senha incorretos.', 'error');
+      }
+
+      if (member.status === 'pending') {
+        return showAuthMsg(msgId, 'Seu cadastro ainda está aguardando a aprovação do Dono da loja.', 'info');
+      }
+      if (member.status === 'blocked') {
+        return showAuthMsg(msgId, 'Seu acesso está bloqueado. Fale com o Dono da loja.', 'error');
+      }
+
+      loginFailures = 0;
+      member.lastAccess = formatNow();
+      enterApp(member, true);
+    }
+
+    // --- Entrar / sair do sistema ---
+    function enterApp(member, fresh) {
+      appData.currentUser = { id: member.id, name: member.name, email: member.email, role: member.role };
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: member.id })); } catch (e) {}
+      saveState();
+
+      document.getElementById('authScreen').classList.add('hidden');
+      ['loginPassword', 'regPassword', 'regPassword2', 'setupPassword', 'setupPassword2']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
+      if (fresh) logAction('Login', 'Login efetuado com sucesso');
+
+      updateUserUI();
+      renderInventory();
+      renderSales();
+      renderMembers();
+      renderSecurityLogs();
+      switchTab('dashboard');
+    }
+
+    function logout() {
+      if (appData.currentUser) logAction('Logout', 'Sessão encerrada pelo usuário');
+      endSession();
+    }
+
+    function endSession(notice) {
+      try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+      appData.currentUser = null;
+      saveState();
+      document.querySelectorAll('[id^="modal"]').forEach(el => el.classList.add('hidden'));
+      showAuthScreen(notice);
+    }
+
+    // --- Sincroniza alterações feitas em outra aba do navegador (ex.: Dono aprovando cadastros) ---
+    window.addEventListener('storage', (ev) => {
+      if (ev.key !== STORAGE_KEY || !ev.newValue) return;
+      try {
+        const fresh = JSON.parse(ev.newValue);
+        const me = appData.currentUser;
+        appData = fresh;
+        appData.currentUser = me;
+        migrateMembers();
+        if (!me) return;
+
+        const member = appData.members.find(m => m.id === me.id);
+        if (!member || member.status !== 'active') {
+          endSession('Seu acesso foi alterado ou removido pelo Dono da loja.');
+          return;
+        }
+        appData.currentUser = { id: member.id, name: member.name, email: member.email, role: member.role };
+        updateUserUI();
+        renderInventory();
+        renderSales();
+        renderMembers();
+        renderSecurityLogs();
+        renderDashboard();
+      } catch (e) { console.error(e); }
+    });
+
+    // --- USER UI (cargo atual, avatar e restrições RBAC) ---
     function updateUserUI() {
       const user = appData.currentUser;
-      const initials = user.name.split(' ').map(n => n[0]).join('');
-      
+      if (!user) return;
+      const initials = user.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
       document.getElementById('userAvatar').innerText = initials;
       document.getElementById('userName').innerText = user.name;
-      
+
       const roleBadges = {
         super_admin: 'Super Admin (Dono)',
         admin: 'Gerente ADM',
         vendedor: 'Membro Vendedor'
       };
       document.getElementById('userRoleBadge').innerText = roleBadges[user.role] || user.role;
-
-      // Update role buttons highlight
-      ['super_admin', 'admin', 'vendedor'].forEach(r => {
-        const btn = document.getElementById(`roleBtn-${r}`);
-        if (btn) {
-          if (r === user.role) {
-            btn.className = 'px-2.5 py-1 rounded-lg font-bold bg-sky-600 text-white shadow-sm';
-          } else {
-            btn.className = 'px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white hover:bg-slate-700/50';
-          }
-        }
-      });
 
       // Show/Hide Seller Banner
       const sellerNotice = document.getElementById('sellerNoticeBanner');
@@ -1252,7 +1682,7 @@
         sellerNotice.classList.add('hidden');
       }
 
-      // Hide or Blur Admin Only Elements
+      // Hide Admin Only Elements
       const isSeller = user.role === 'vendedor';
       document.querySelectorAll('.adm-only').forEach(el => {
         if (isSeller) {
@@ -1261,11 +1691,6 @@
           el.classList.remove('hidden');
         }
       });
-    }
-
-    function simulateLogout() {
-      alert("Simulação de Logout. Você será redirecionado para o perfil de Super Admin.");
-      switchUserRole('super_admin');
     }
 
     // --- DASHBOARD RENDER & FIPE CALCULATIONS ---
@@ -1678,15 +2103,15 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/40 transition-colors';
         tr.innerHTML = `
-          <td class="p-3.5 text-slate-400 font-mono">${s.date}</td>
+          <td class="p-3.5 text-slate-400 font-mono">${escapeHtml(s.date)}</td>
           <td class="p-3.5">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.type === 'receita' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
               ${s.type.toUpperCase()}
             </span>
           </td>
-          <td class="p-3.5 font-medium text-white">${s.desc}</td>
-          <td class="p-3.5 text-slate-300">${s.responsible}</td>
-          <td class="p-3.5 text-slate-400">${s.method}</td>
+          <td class="p-3.5 font-medium text-white">${escapeHtml(s.desc)}</td>
+          <td class="p-3.5 text-slate-300">${escapeHtml(s.responsible)}</td>
+          <td class="p-3.5 text-slate-400">${escapeHtml(s.method)}</td>
           <td class="p-3.5 text-right font-mono font-bold ${s.type === 'receita' ? 'text-emerald-400' : 'text-rose-400'}">
             ${s.type === 'receita' ? '+' : '-'}${formatMoney(s.amount)}
           </td>
@@ -1724,7 +2149,7 @@
       // Sellers list
       const selectSeller = document.getElementById('saleSellerSelect');
       selectSeller.innerHTML = '';
-      appData.members.forEach(m => {
+      appData.members.filter(m => m.status === 'active').forEach(m => {
         const opt = document.createElement('option');
         opt.value = m.name;
         opt.innerText = `${m.name} (${m.role})`;
@@ -1826,49 +2251,83 @@
       logAction('Financeiro', `Novo lançamento registrado: ${trx.desc} (${formatMoney(trx.amount)})`);
     }
 
-    // --- MEMBERS & RBAC USER MANAGEMENT ---
+    // --- MEMBERS & RBAC USER MANAGEMENT (cargos administrados pelo Dono) ---
+    const ROLE_LABELS = { super_admin: 'Super ADM (Dono)', admin: 'Gerente ADM', vendedor: 'Membro Vendedor' };
+
     function renderMembers() {
+      const me = appData.currentUser;
+      if (!me) return;
+      const owner = isOwner();
       const tbody = document.getElementById('membersTableBody');
       tbody.innerHTML = '';
 
-      const isSuperAdmin = appData.currentUser.role === 'super_admin';
-      document.getElementById('membersCountText').innerText = `${appData.members.length} membros cadastrados`;
+      const pendingCount = appData.members.filter(m => m.status === 'pending').length;
+      document.getElementById('membersCountText').innerText =
+        `${appData.members.length} membros cadastrados` + (pendingCount ? ` • ${pendingCount} aguardando aprovação` : '');
 
-      // Hide Add Member button if not Super Admin or Admin
+      // Só o Dono adiciona membros e vê o aviso de pendências
       const btnAddMem = document.getElementById('btnAddMember');
-      if (btnAddMem) {
-        if (appData.currentUser.role === 'vendedor') {
-          btnAddMem.classList.add('hidden');
-        } else {
-          btnAddMem.classList.remove('hidden');
-        }
+      if (btnAddMem) btnAddMem.classList.toggle('hidden', !owner);
+      const badge = document.getElementById('pendingBadge');
+      if (badge) {
+        badge.classList.toggle('hidden', !(owner && pendingCount > 0));
+        badge.innerText = pendingCount;
       }
 
       appData.members.forEach(m => {
+        const isSelf = m.id === me.id;
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/40 transition-colors';
 
         let roleBadge = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
-        let roleLabel = 'Membro Vendedor';
-        if (m.role === 'super_admin') {
-          roleBadge = 'bg-sky-500/10 text-sky-400 border border-sky-500/30';
-          roleLabel = 'Super ADM (Dono)';
-        } else if (m.role === 'admin') {
-          roleBadge = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30';
-          roleLabel = 'Gerente ADM';
+        if (m.role === 'super_admin') roleBadge = 'bg-sky-500/10 text-sky-400 border border-sky-500/30';
+        else if (m.role === 'admin') roleBadge = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30';
+
+        const roleCell = (owner && !isSelf)
+          ? `<select onchange="changeMemberRole('${m.id}', this.value)" class="bg-slate-950 border border-slate-700 text-[11px] text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-sky-500">
+               <option value="vendedor" ${m.role === 'vendedor' ? 'selected' : ''}>Membro Vendedor</option>
+               <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Gerente ADM</option>
+               <option value="super_admin" ${m.role === 'super_admin' ? 'selected' : ''}>Super ADM (Dono)</option>
+             </select>`
+          : `<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${roleBadge}">${ROLE_LABELS[m.role] || escapeHtml(m.role)}</span>`;
+
+        const requested = (m.status === 'pending' && m.requestedRole)
+          ? `<div class="text-[10px] text-amber-400 mt-1">Pediu cargo: ${m.requestedRole === 'admin' ? 'Gerente' : 'Vendedor'}</div>` : '';
+
+        const statusMap = {
+          active: ['ATIVO', 'bg-emerald-500/10 text-emerald-400'],
+          pending: ['PENDENTE', 'bg-amber-500/10 text-amber-400'],
+          blocked: ['BLOQUEADO', 'bg-rose-500/10 text-rose-400']
+        };
+        const [statusLabel, statusClass] = statusMap[m.status] || statusMap.blocked;
+
+        let actions = '<span class="text-slate-600 text-[10px]">Sem Permissão</span>';
+        if (owner && isSelf) {
+          actions = '<span class="text-slate-500 text-[10px]">Você</span>';
+        } else if (owner) {
+          actions = `
+            ${m.status === 'pending' ? `
+              <button onclick="approveMember('${m.id}')" title="Aprovar cadastro" class="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all">
+                <i class="fa-solid fa-check"></i>
+              </button>` : `
+              <button onclick="toggleMemberStatus('${m.id}')" title="${m.status === 'active' ? 'Bloquear acesso' : 'Liberar acesso'}" class="p-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700">
+                <i class="fa-solid ${m.status === 'active' ? 'fa-ban' : 'fa-lock-open'}"></i>
+              </button>`}
+            <button onclick="openResetPassword('${m.id}')" title="Definir nova senha" class="p-1.5 rounded-lg bg-slate-800 text-sky-400 hover:bg-slate-700">
+              <i class="fa-solid fa-key"></i>
+            </button>
+            <button onclick="deleteMember('${m.id}')" title="Excluir membro" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-600 hover:text-white transition-all">
+              <i class="fa-solid fa-trash"></i>
+            </button>`;
         }
 
         tr.innerHTML = `
           <td class="p-3.5">
-            <div class="font-bold text-white">${m.name}</div>
-            <div class="text-[10px] text-slate-500 font-mono">ID: ${m.id}</div>
+            <div class="font-bold text-white">${escapeHtml(m.name)}</div>
+            <div class="text-[10px] text-slate-500 font-mono">ID: ${escapeHtml(m.id)}</div>
           </td>
-          <td class="p-3.5 text-slate-300 font-mono">${m.email}</td>
-          <td class="p-3.5">
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${roleBadge}">
-              ${roleLabel}
-            </span>
-          </td>
+          <td class="p-3.5 text-slate-300 font-mono">${escapeHtml(m.email)}</td>
+          <td class="p-3.5">${roleCell}${requested}</td>
           <td class="p-3.5">
             ${m.req2fa ? `
               <span class="text-emerald-400 text-[11px] font-semibold flex items-center gap-1">
@@ -1879,42 +2338,43 @@
             `}
           </td>
           <td class="p-3.5">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${m.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
-              ${m.active ? 'ATIVO' : 'BLOQUEADO'}
-            </span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusClass}">${statusLabel}</span>
           </td>
-          <td class="p-3.5 text-slate-400 text-[11px]">${m.lastAccess || 'Recentemente'}</td>
-          <td class="p-3.5 text-right space-x-1">
-            ${isSuperAdmin ? `
-              <button onclick="toggleMemberRole('${m.id}')" title="Alterar Nível" class="p-1.5 rounded-lg bg-slate-800 text-sky-400 hover:bg-slate-700">
-                <i class="fa-solid fa-user-shield"></i>
-              </button>
-              <button onclick="toggleMemberActive('${m.id}')" title="Ativar/Bloquear" class="p-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700">
-                <i class="fa-solid fa-ban"></i>
-              </button>
-            ` : '<span class="text-slate-600 text-[10px]">Sem Permissão</span>'}
-          </td>
+          <td class="p-3.5 text-slate-400 text-[11px]">${escapeHtml(m.lastAccess || 'Recentemente')}</td>
+          <td class="p-3.5 text-right space-x-1 whitespace-nowrap">${actions}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
     function openAddMemberModal() {
+      if (!isOwner()) return;
+      ['memName', 'memEmail', 'memPassword'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('modalMember').classList.remove('hidden');
     }
 
     function saveMember(e) {
       e.preventDefault();
+      if (!isOwner()) return;
+
+      const name = document.getElementById('memName').value.trim();
+      const email = document.getElementById('memEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('memPassword').value;
+      const role = document.getElementById('memRole').value;
+
+      if (pass.length < MIN_PASSWORD) return alert(`A senha provisória precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
+      if (appData.members.some(m => m.email.toLowerCase() === email)) return alert('Já existe um membro com este e-mail.');
 
       const newMember = {
         id: 'usr_' + Date.now(),
-        name: document.getElementById('memName').value,
-        email: document.getElementById('memEmail').value,
-        role: document.getElementById('memRole').value,
+        name: name,
+        email: email,
+        role: ['vendedor', 'admin', 'super_admin'].includes(role) ? role : 'vendedor',
         req2fa: document.getElementById('memReq2fa').checked,
-        active: true,
+        status: 'active',
         lastAccess: 'Nunca acessou'
       };
+      setMemberPassword(newMember, pass);
 
       appData.members.push(newMember);
       saveState();
@@ -1924,27 +2384,92 @@
       logAction('Área de Membros', `Novo usuário cadastrado: ${newMember.name} (${newMember.role})`);
     }
 
-    function toggleMemberRole(id) {
+    function approveMember(id) {
+      if (!isOwner()) return;
       const m = appData.members.find(x => x.id === id);
-      if (!m) return;
-
-      const roles = ['vendedor', 'admin', 'super_admin'];
-      const nextRole = roles[(roles.indexOf(m.role) + 1) % roles.length];
-      m.role = nextRole;
-
+      if (!m || m.status !== 'pending') return;
+      m.status = 'active';
       saveState();
       renderMembers();
-      logAction('Área de Membros', `Permissão alterada para ${m.name}: Novo nível -> ${m.role}`);
+      logAction('Área de Membros', `Cadastro aprovado: ${m.name} (cargo atual: ${ROLE_LABELS[m.role] || m.role})`);
     }
 
-    function toggleMemberActive(id) {
+    function changeMemberRole(id, newRole) {
+      if (!isOwner()) return;
       const m = appData.members.find(x => x.id === id);
-      if (!m) return;
-      m.active = !m.active;
+      if (!m || m.id === appData.currentUser.id) return;
+      if (!['vendedor', 'admin', 'super_admin'].includes(newRole)) return;
 
+      if (m.role === 'super_admin' && newRole !== 'super_admin' && m.status === 'active' && countActiveOwners(m.id) < 1) {
+        alert('A loja precisa ter pelo menos um Dono ativo.');
+        renderMembers();
+        return;
+      }
+
+      const old = m.role;
+      m.role = newRole;
       saveState();
       renderMembers();
-      logAction('Área de Membros', `Status de acesso alterado para ${m.name}: ${m.active ? 'Liberado' : 'Bloqueado'}`);
+      logAction('Área de Membros', `Cargo de ${m.name} alterado: ${ROLE_LABELS[old] || old} -> ${ROLE_LABELS[newRole]}`);
+    }
+
+    function toggleMemberStatus(id) {
+      if (!isOwner()) return;
+      const m = appData.members.find(x => x.id === id);
+      if (!m || m.id === appData.currentUser.id || m.status === 'pending') return;
+
+      if (m.status === 'active') {
+        if (m.role === 'super_admin' && countActiveOwners(m.id) < 1) {
+          return alert('A loja precisa ter pelo menos um Dono ativo.');
+        }
+        m.status = 'blocked';
+      } else {
+        m.status = 'active';
+      }
+      saveState();
+      renderMembers();
+      logAction('Área de Membros', `Status de acesso alterado para ${m.name}: ${m.status === 'active' ? 'Liberado' : 'Bloqueado'}`);
+    }
+
+    function openResetPassword(id) {
+      if (!isOwner()) return;
+      const m = appData.members.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('resetMemberId').value = m.id;
+      document.getElementById('resetMemberName').innerText = m.name;
+      document.getElementById('resetNewPassword').value = '';
+      document.getElementById('modalResetPass').classList.remove('hidden');
+    }
+
+    function saveResetPassword(e) {
+      e.preventDefault();
+      if (!isOwner()) return;
+      const m = appData.members.find(x => x.id === document.getElementById('resetMemberId').value);
+      const pass = document.getElementById('resetNewPassword').value;
+      if (!m) return;
+      if (pass.length < MIN_PASSWORD) return alert(`A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
+
+      setMemberPassword(m, pass);
+      saveState();
+      closeModal('modalResetPass');
+      document.getElementById('resetNewPassword').value = '';
+      logAction('Área de Membros', `Nova senha definida pelo Dono para ${m.name}`);
+      alert(`Senha de ${m.name} atualizada.`);
+    }
+
+    function deleteMember(id) {
+      if (!isOwner()) return;
+      const m = appData.members.find(x => x.id === id);
+      if (!m || m.id === appData.currentUser.id) return;
+      if (m.role === 'super_admin' && m.status === 'active' && countActiveOwners(m.id) < 1) {
+        return alert('A loja precisa ter pelo menos um Dono ativo.');
+      }
+      if (!confirm(`Excluir ${m.name} do sistema? Essa pessoa perderá o acesso imediatamente.`)) return;
+
+      appData.members = appData.members.filter(x => x.id !== id);
+      saveState();
+      renderMembers();
+      logAction('Área de Membros', `Membro removido: ${m.name}`);
     }
 
     // --- SECURITY & AUDIT LOGS ---
@@ -1957,14 +2482,14 @@
         tr.className = 'hover:bg-slate-800/40 transition-colors';
 
         tr.innerHTML = `
-          <td class="p-3.5 text-slate-400">${log.timestamp}</td>
-          <td class="p-3.5 text-white font-semibold">${log.user}</td>
-          <td class="p-3.5 text-sky-400">${log.role}</td>
-          <td class="p-3.5 text-slate-200 font-sans">${log.action}</td>
-          <td class="p-3.5 text-emerald-400 font-mono text-[11px]">${log.ip}</td>
+          <td class="p-3.5 text-slate-400">${escapeHtml(log.timestamp)}</td>
+          <td class="p-3.5 text-white font-semibold">${escapeHtml(log.user)}</td>
+          <td class="p-3.5 text-sky-400">${escapeHtml(log.role)}</td>
+          <td class="p-3.5 text-slate-200 font-sans">${escapeHtml(log.action)}</td>
+          <td class="p-3.5 text-emerald-400 font-mono text-[11px]">${escapeHtml(log.ip)}</td>
           <td class="p-3.5 text-right">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
-              ${log.status}
+              ${escapeHtml(log.status)}
             </span>
           </td>
         `;
@@ -1986,15 +2511,16 @@
       logAction('Segurança', 'Configurações de restrição de rede e 2FA atualizadas pelo administrador');
     }
 
-    function logAction(category, actionText) {
+    function logAction(category, actionText, actor) {
       const now = new Date();
       const timestamp = now.toISOString().replace('T', ' ').substring(0, 16);
+      const who = actor || appData.currentUser || { name: 'Visitante', role: 'anonimo' };
 
       const newLog = {
         id: 'log_' + Date.now(),
         timestamp: timestamp,
-        user: appData.currentUser.name,
-        role: appData.currentUser.role.toUpperCase(),
+        user: who.name,
+        role: String(who.role).toUpperCase(),
         action: `[${category}] ${actionText}`,
         ip: appData.securitySettings.corporateIp || '189.45.210.88',
         status: 'Auditado'
