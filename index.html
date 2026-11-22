@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDrive DMS & ERP - Gestão de Revenda de Veículos</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    /* Custom scrollbar for dense tables */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(71, 85, 105, 1);
+    }
+    .blur-cost {
+      filter: blur(4px);
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+
+  <!-- TOP HEADER / NAVBAR -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+    <!-- Brand Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 font-black text-xl">
+        <i class="fa-solid fa-car-side"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-2">
+          AutoDrive <span class="bg-sky-500/10 text-sky-400 text-xs px-2 py-0.5 rounded-full border border-sky-500/20 font-semibold">DMS ERP</span>
+        </h1>
+        <p class="text-xs text-slate-400">Gestão Inteligente & Mercado FIPE</p>
+      </div>
+    </div>
+
+    <!-- Quick Role Switcher (Simulação para Teste Ágil) -->
+    <div class="flex items-center bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 text-xs gap-1">
+      <span class="text-slate-400 font-medium px-2 hidden sm:inline"><i class="fa-solid fa-user-gear mr-1"></i>Perfil Atual:</span>
+      <button onclick="switchUserRole('super_admin')" id="roleBtn-super_admin" class="px-2.5 py-1 rounded-lg font-medium transition-all">Super ADM</button>
+      <button onclick="switchUserRole('admin')" id="roleBtn-admin" class="px-2.5 py-1 rounded-lg font-medium transition-all">Gerente ADM</button>
+      <button onclick="switchUserRole('vendedor')" id="roleBtn-vendedor" class="px-2.5 py-1 rounded-lg font-medium transition-all">Vendedor</button>
+    </div>
+
+    <!-- Network Security & Market Status Badges -->
+    <div class="flex items-center gap-3">
+      <!-- Sync Market FIPE Button -->
+      <button onclick="openMarketSyncModal()" class="hidden md:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 text-xs px-3 py-1.5 rounded-lg transition-all shadow-sm">
+        <i class="fa-solid fa-rotate text-sky-400 animate-spin-slow"></i>
+        <span>Sincronizar FIPE</span>
+      </button>
+
+      <!-- Security Status -->
+      <div class="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1.5 rounded-lg">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-medium">Rede Corporativa Segura</span>
+      </div>
+
+      <!-- User Profile Badge -->
+      <div class="flex items-center gap-2.5 border-l border-slate-800 pl-3">
+        <div id="userAvatar" class="w-9 h-9 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-sky-400 text-sm">
+          CS
+        </div>
+        <div class="hidden sm:block text-left">
+          <div id="userName" class="text-xs font-semibold text-slate-200">Carlos Silveira</div>
+          <div id="userRoleBadge" class="text-[10px] text-sky-400 font-medium">Super Admin</div>
+        </div>
+        <button onclick="simulateLogout()" title="Sair / Login" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg transition-colors">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN NAVIGATION & CONTENT WRAPPER -->
+  <div class="flex-1 flex flex-col md:flex-row">
+    
+    <!-- SIDEBAR MENU -->
+    <aside class="w-full md:w-64 bg-slate-900/90 border-r border-slate-800 p-3 flex md:flex-col justify-between shrink-0">
+      <nav class="space-y-1 flex md:flex-col flex-row overflow-x-auto w-full gap-1 md:gap-0">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <i class="fa-solid fa-chart-pie text-base"></i>
+          <span>Dashboard & Mercado</span>
+        </button>
+        <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <i class="fa-solid fa-car text-base"></i>
+          <span>Estoque de Veículos</span>
+        </button>
+        <button onclick="switchTab('sales')" id="nav-sales" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <i class="fa-solid fa-file-invoice-dollar text-base"></i>
+          <span>Vendas & Financeiro</span>
+        </button>
+        <button onclick="switchTab('members')" id="nav-members" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <i class="fa-solid fa-users-gear text-base"></i>
+          <span>Membros & Cargos</span>
+        </button>
+        <button onclick="switchTab('security')" id="nav-security" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <i class="fa-solid fa-shield-halved text-base"></i>
+          <span>Segurança & Logs</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Security Banner -->
+      <div class="hidden md:block p-3.5 bg-slate-800/50 rounded-xl border border-slate-800 mt-6">
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+          <span class="font-medium">Proteção de Dados</span>
+          <i class="fa-solid fa-lock text-emerald-400"></i>
+        </div>
+        <div class="text-[11px] text-slate-300 leading-relaxed">
+          Criptografia SSL + Restrição por Perfil RBAC Ativos.
+        </div>
+        <div class="mt-2 text-[10px] text-slate-400 font-mono">
+          IP: <span id="currentIpDisplay">189.45.210.88</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN DYNAMIC CONTENT AREA -->
+    <main class="flex-1 p-4 lg:p-6 overflow-x-hidden">
+
+      <!-- ALERT BANNER FOR SELLER RESTRICTION NOTICE -->
+      <div id="sellerNoticeBanner" class="hidden mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-user-lock text-lg"></i>
+          <div>
+            <strong class="font-semibold block text-amber-200">Modo Vendedor Ativo (Acesso Restrito)</strong>
+            <span>Os preços de custo, despesas de oficina e margem líquida de lucro foram ocultados do sistema por questões de segurança corporativa.</span>
+          </div>
+        </div>
+        <span class="bg-amber-500/20 px-2.5 py-1 rounded font-mono text-[10px] text-amber-200">Segurança RBAC</span>
+      </div>
+
+      <!-- TAB 1: DASHBOARD & MERCADO FIPE -->
+      <section id="tab-dashboard" class="tab-content space-y-6">
+        <!-- Dashboard Header & Market Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              Painel Executivo & Cotação FIPE
+            </h2>
+            <p class="text-xs text-slate-400">Visão em tempo real da loja com recalculo dinâmico de mercado.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openMarketSyncModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-sky-600/20 flex items-center gap-2">
+              <i class="fa-solid fa-chart-line"></i>
+              Simular Variação da FIPE
+            </button>
+          </div>
+        </div>
+
+        <!-- TOP KPI CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <!-- Total Venda -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium">Estoque (Venda)</span>
+              <i class="fa-solid fa-car-side text-sky-400"></i>
+            </div>
+            <div class="text-lg font-extrabold text-white" id="kpiTotalVenda">R$ 0,00</div>
+            <div class="text-[10px] text-slate-400 mt-1">Soma dos anúncios</div>
+          </div>
+
+          <!-- Total Custo (ADM ONLY) -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium">Custo Investido</span>
+              <i class="fa-solid fa-sack-dollar text-indigo-400"></i>
+            </div>
+            <div class="text-lg font-extrabold text-slate-200" id="kpiTotalCusto">R$ 0,00</div>
+            <div class="text-[10px] text-slate-400 mt-1">Compra + Preparação</div>
+          </div>
+
+          <!-- Lucro Projetado (ADM ONLY) -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium">Lucro Projetado</span>
+              <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
+            </div>
+            <div class="text-lg font-extrabold text-emerald-400" id="kpiLucroProjetado">R$ 0,00</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="kpiMargemPerc">0% margem média</div>
+          </div>
+
+          <!-- Veículos no Pátio -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium">Total de Veículos</span>
+              <i class="fa-solid fa-warehouse text-amber-400"></i>
+            </div>
+            <div class="text-lg font-extrabold text-white" id="kpiTotalCarros">0</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="kpiStatusCarros">0 disp. | 0 res.</div>
+          </div>
+
+          <!-- Ticket Médio -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium">Ticket Médio</span>
+              <i class="fa-solid fa-tags text-cyan-400"></i>
+            </div>
+            <div class="text-lg font-extrabold text-white" id="kpiTicketMedio">R$ 0,00</div>
+            <div class="text-[10px] text-slate-400 mt-1">Valor por veículo</div>
+          </div>
+
+          <!-- Índice FIPE vs Mercado -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium">Posição FIPE</span>
+              <i class="fa-solid fa-scale-balanced text-purple-400"></i>
+            </div>
+            <div class="text-lg font-extrabold text-sky-400" id="kpiIndiceFipe">+0.0%</div>
+            <div class="text-[10px] text-slate-400 mt-1">Comparado ao mercado</div>
+          </div>
+        </div>
+
+        <!-- CHARTS SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Main Chart: Comparison -->
+          <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-200 text-sm">Comparativo: Preço de Venda vs Tabela FIPE</h3>
+                <p class="text-xs text-slate-400">Análise de precificação em relação à referência de mercado</p>
+              </div>
+              <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">Ao Vivo</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chartPriceComparison"></canvas>
+            </div>
+          </div>
+
+          <!-- Doughnut Chart: Status Breakdown -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-200 text-sm">Distribuição do Pátio</h3>
+                <p class="text-xs text-slate-400">Status atual dos veículos</p>
+              </div>
+            </div>
+            <div class="h-64 relative flex items-center justify-center">
+              <canvas id="chartStockStatus"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK MARKET FIPE HIGHLIGHTS TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-slate-200 text-sm">Painel de Cotação FIPE & Oportunidades do Pátio</h3>
+              <p class="text-xs text-slate-400">Veículos com variação relevante perante a tabela oficial</p>
+            </div>
+            <button onclick="switchTab('inventory')" class="text-xs text-sky-400 hover:text-sky-300 font-medium">Ver Todo Estoque &rarr;</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="p-3 rounded-l-lg">Veículo</th>
+                  <th class="p-3">Ano</th>
+                  <th class="p-3">Preço Anunciado</th>
+                  <th class="p-3">Tabela FIPE (Ref)</th>
+                  <th class="p-3">Diferença FIPE</th>
+                  <th class="p-3 rounded-r-lg">Status Mercado</th>
+                </tr>
+              </thead>
+              <tbody id="fipeHighlightsTable" class="divide-y divide-slate-800/60">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: GESTÃO DE ESTOQUE (DMS CRUD) -->
+      <section id="tab-inventory" class="tab-content space-y-6 hidden">
+        <!-- Inventory Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Estoque de Veículos (DMS)</h2>
+            <p class="text-xs text-slate-400">Controle rigoroso de chassi, custos de oficina e precificação.</p>
+          </div>
+          <button onclick="openAddVehicleModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-sky-600/20 flex items-center gap-2 self-start sm:self-auto">
+            <i class="fa-solid fa-plus"></i>
+            Cadastrar Novo Veículo
+          </button>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full md:w-96">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
+            <input type="text" id="inventorySearch" oninput="renderInventory()" placeholder="Buscar por modelo, marca, placa ou chassi..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500">
+          </div>
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <select id="filterStatus" onchange="renderInventory()" class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-sky-500">
+              <option value="todos">Todos os Status</option>
+              <option value="Disponível">Disponível</option>
+              <option value="Reservado">Reservado</option>
+              <option value="Em Preparação">Em Preparação</option>
+              <option value="Vendido">Vendido</option>
+            </select>
+            <select id="filterBrand" onchange="renderInventory()" class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-sky-500">
+              <option value="todas">Todas as Marcas</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- INVENTORY TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Veículo / Detalhes</th>
+                  <th class="p-3.5">Placa & Chassi</th>
+                  <th class="p-3.5">Dias no Pátio</th>
+                  <th class="p-3.5 adm-only">Custo + Prep.</th>
+                  <th class="p-3.5">Ref. FIPE</th>
+                  <th class="p-3.5">Preço Venda</th>
+                  <th class="p-3.5 adm-only">Lucro Estimado</th>
+                  <th class="p-3.5">Status</th>
+                  <th class="p-3.5 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTableBody" class="divide-y divide-slate-800/70">
+                <!-- Dynamic Items -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: VENDAS & FINANCEIRO -->
+      <section id="tab-sales" class="tab-content space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Vendas & Fluxo Financeiro</h2>
+            <p class="text-xs text-slate-400">Registro de transações, comissões e lançamentos de despesas da loja.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openRegisterSaleModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2">
+              <i class="fa-solid fa-handshake"></i>
+              Registrar Nova Venda
+            </button>
+            <button onclick="openNewTransactionModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              Nova Despesa / Receita
+            </button>
+          </div>
+        </div>
+
+        <!-- FINANCIAL SUMMARY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <span class="text-xs text-slate-400 font-medium">Receita Total de Vendas</span>
+            <div class="text-lg font-bold text-emerald-400 mt-1" id="finReceitaTotal">R$ 0,00</div>
+            <span class="text-[10px] text-slate-500" id="finVendasCount">0 vendas efetuadas</span>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <span class="text-xs text-slate-400 font-medium">Despesas & Oficina</span>
+            <div class="text-lg font-bold text-rose-400 mt-1" id="finDespesasTotal">R$ 0,00</div>
+            <span class="text-[10px] text-slate-500">Manutenção + Custos Fixos</span>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <span class="text-xs text-slate-400 font-medium">Saldo Operacional</span>
+            <div class="text-lg font-bold text-white mt-1" id="finSaldoOperacional">R$ 0,00</div>
+            <span class="text-[10px] text-slate-500">Receitas - Despesas</span>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <span class="text-xs text-slate-400 font-medium">Comissões Pagas</span>
+            <div class="text-lg font-bold text-amber-400 mt-1" id="finComissoesTotal">R$ 0,00</div>
+            <span class="text-[10px] text-slate-500">Repasse para equipe</span>
+          </div>
+        </div>
+
+        <!-- TRANSACTIONS / SALES TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-slate-200 text-sm">Extrato de Lançamentos & Vendas</h3>
+            <span class="text-xs text-slate-400 font-mono">Movimentações Consolidadas</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="p-3.5">Data</th>
+                  <th class="p-3.5">Tipo</th>
+                  <th class="p-3.5">Descrição / Veículo</th>
+                  <th class="p-3.5">Responsável</th>
+                  <th class="p-3.5">Forma Pagto</th>
+                  <th class="p-3.5 text-right">Valor Total</th>
+                </tr>
+              </thead>
+              <tbody id="salesTableBody" class="divide-y divide-slate-800/60">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: ÁREA DE MEMBROS & RBAC -->
+      <section id="tab-members" class="tab-content space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Área de Membros & Níveis de Acesso (RBAC)</h2>
+            <p class="text-xs text-slate-400">Controle de logins, hierarquia de Administradores e atribuição de permissões.</p>
+          </div>
+          <button id="btnAddMember" onclick="openAddMemberModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-sky-600/20 flex items-center gap-2 self-start sm:self-auto">
+            <i class="fa-solid fa-user-plus"></i>
+            Adicionar Novo Membro
+          </button>
+        </div>
+
+        <!-- PERMISSION ROLES EXPLANATION -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="flex items-center gap-2 text-sky-400 font-bold text-xs mb-2">
+              <i class="fa-solid fa-shield-cat text-base"></i>
+              Super Administrador (Dono)
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Acesso irrestrito a todos os dados financeiros, logs de auditoria, custos de aquisição e poder para criar/promover outros ADMs.
+            </p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="flex items-center gap-2 text-indigo-400 font-bold text-xs mb-2">
+              <i class="fa-solid fa-user-shield text-base"></i>
+              Gerente Administrador
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Gerencia estoque, cadastra veículos, registra vendas e edita vendedores. Acesso completo a custos de compra, mas sem autoridade de delegação máster.
+            </p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="flex items-center gap-2 text-amber-400 font-bold text-xs mb-2">
+              <i class="fa-solid fa-user-tag text-base"></i>
+              Membro Vendedor
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Acesso exclusivo para consulta de catálogo, cotação FIPE, preço de venda e registro de propostas. <strong class="text-amber-300">Preço de compra e margem ficam ocultos.</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- MEMBERS TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-slate-200 text-sm">Usuários Cadastrados na Empresa</h3>
+            <span class="text-xs text-slate-400" id="membersCountText">0 usuários ativos</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="p-3.5">Nome / Usuário</th>
+                  <th class="p-3.5">Email</th>
+                  <th class="p-3.5">Cargo / Nível</th>
+                  <th class="p-3.5">2FA Status</th>
+                  <th class="p-3.5">Status Acesso</th>
+                  <th class="p-3.5">Último Acesso</th>
+                  <th class="p-3.5 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="membersTableBody" class="divide-y divide-slate-800/70">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: SEGURANÇA DE REDE & LOGS DE AUDITORIA -->
+      <section id="tab-security" class="tab-content space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Central de Segurança & Log de Auditoria</h2>
+            <p class="text-xs text-slate-400">Monitoramento da rede corporativa, IP bloqueado, verificação em duas etapas e rastreamento de ações.</p>
+          </div>
+          <button onclick="simulateLogAction('Auditoria', 'Relatório de segurança exportado pelo administrador')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-2 self-start sm:self-auto">
+            <i class="fa-solid fa-download"></i>
+            Exportar Relatório de Auditoria
+          </button>
+        </div>
+
+        <!-- SECURITY CONFIGURATION CARDS -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Network Protection Settings -->
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-network-wired text-sky-400"></i>
+              Restrições de Rede & IP
+            </h3>
+            
+            <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <div>
+                <div class="text-xs font-semibold text-slate-200">Travar por IP da Loja</div>
+                <div class="text-[10px] text-slate-400">Impede acesso de vendedores fora do Wi-Fi da loja</div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="secToggleIp" class="sr-only peer" checked onchange="updateSecurityConfig()">
+                <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <div>
+                <div class="text-xs font-semibold text-slate-200">Exigir 2FA para Admins</div>
+                <div class="text-[10px] text-slate-400">Autenticação em 2 fatores obrigatória</div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="secToggle2fa" class="sr-only peer" checked onchange="updateSecurityConfig()">
+                <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <div>
+                <div class="text-xs font-semibold text-slate-200">Bloqueio Fora do Horário</div>
+                <div class="text-[10px] text-slate-400">Restringe vendedores entre 19:00 e 08:00</div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="secToggleHours" class="sr-only peer" checked onchange="updateSecurityConfig()">
+                <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- IP Whitelist Status -->
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-wifi text-emerald-400"></i>
+              IPs Autorizados na Loja
+            </h3>
+            <div class="space-y-2">
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-mono text-emerald-400">189.45.210.88 (Matriz - Wi-Fi Principal)</div>
+                  <div class="text-[10px] text-slate-400">Status: Ativo e Verificado</div>
+                </div>
+                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded font-medium">Primário</span>
+              </div>
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-mono text-slate-300">177.33.190.12 (Rede de Reserva 4G)</div>
+                  <div class="text-[10px] text-slate-400">Status: Standby Autorizado</div>
+                </div>
+                <span class="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded font-medium">Backup</span>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-normal">
+              Tentativas de acesso fora destes IPs acionam um alerta automático de segurança e exigem aprovação do Super Admin.
+            </p>
+          </div>
+
+          <!-- 2FA Simulator Box -->
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-key text-amber-400"></i>
+                Simulador de Código 2FA
+              </h3>
+              <p class="text-xs text-slate-400">Gerador de Token Temporário (Authenticator TOTP)</p>
+            </div>
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center space-y-2">
+              <div class="text-2xl font-mono font-extrabold text-sky-400 tracking-widest" id="totpCodeDisplay">
+                849 201
+              </div>
+              <div class="text-[10px] text-slate-400">Expira em <span id="totpTimer" class="text-amber-400 font-bold">24s</span></div>
+            </div>
+            <button onclick="generateNewTotp()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs py-2 rounded-xl border border-slate-700 transition-all font-medium">
+              Gerar Novo Token 2FA
+            </button>
+          </div>
+        </div>
+
+        <!-- AUDIT LOG TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-200 text-sm">Log de Auditoria em Tempo Real</h3>
+              <p class="text-xs text-slate-400">Histórico inalterável de todas as ações executadas no ERP</p>
+            </div>
+            <span class="bg-sky-500/10 text-sky-400 text-xs px-2.5 py-1 rounded-lg border border-sky-500/20 font-mono">
+              Registros ao Vivo
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="p-3.5">Data / Hora</th>
+                  <th class="p-3.5">Usuário</th>
+                  <th class="p-3.5">Nível</th>
+                  <th class="p-3.5">Ação Executada</th>
+                  <th class="p-3.5">Endereço IP</th>
+                  <th class="p-3.5 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody id="auditLogTableBody" class="divide-y divide-slate-800/60 font-mono">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS SECTION -->
+
+  <!-- 1. MODAL: MARKET FIPE SYNC & SIMULATOR -->
+  <div id="modalMarketSync" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-chart-line text-sky-400"></i>
+          Simular Variação do Mercado FIPE
+        </h3>
+        <button onclick="closeModal('modalMarketSync')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4 text-xs text-slate-300">
+        <p class="leading-relaxed">
+          Ajuste o percentual para simular uma oscilação na Tabela FIPE de todo o mercado nacional. Todos os carros do estoque terão o valor de referência recalculado instantaneamente.
+        </p>
+
+        <!-- Presets -->
+        <div class="space-y-1.5">
+          <label class="text-slate-400 font-medium">Ajustes Rápidos de Mercado:</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="setMarketPreset(-3)" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl text-center border border-slate-700 text-rose-400 font-bold">-3.0% (Queda)</button>
+            <button onclick="setMarketPreset(-1.5)" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl text-center border border-slate-700 text-amber-400 font-bold">-1.5% (Leve)</button>
+            <button onclick="setMarketPreset(0)" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl text-center border border-slate-700 text-slate-200 font-bold">0% (Base)</button>
+            <button onclick="setMarketPreset(2.5)" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl text-center border border-slate-700 text-emerald-400 font-bold">+2.5% (Alta)</button>
+          </div>
+        </div>
+
+        <!-- Custom Percent Input -->
+        <div class="space-y-1">
+          <label class="text-slate-400 font-medium">Variação Customizada (%):</label>
+          <input type="number" step="0.1" id="inputFipePercent" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+          <div class="flex justify-between">
+            <span>Impacto na Margem Total:</span>
+            <span id="marketImpactPreview" class="font-bold text-sky-400">Calculando...</span>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-end gap-2">
+        <button onclick="closeModal('modalMarketSync')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium text-xs">Cancelar</button>
+        <button onclick="applyMarketSync()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs px-4 py-2 rounded-xl transition-all">Aplicar Recalculo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MODAL: ADD / EDIT VEHICLE -->
+  <div id="modalVehicle" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2" id="modalVehicleTitle">
+          <i class="fa-solid fa-car text-sky-400"></i>
+          Cadastrar Novo Veículo no Pátio
+        </h3>
+        <button onclick="closeModal('modalVehicle')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      
+      <form id="formVehicle" onsubmit="saveVehicle(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+        <input type="hidden" id="vehId">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Marca</label>
+            <input type="text" id="vehMarca" required placeholder="Ex: Toyota, Jeep, BMW" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Modelo & Versão</label>
+            <input type="text" id="vehModelo" required placeholder="Ex: Corolla Cross XRE 2.0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Ano Modelo</label>
+            <input type="number" id="vehAno" required placeholder="2023" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Placa</label>
+            <input type="text" id="vehPlaca" required placeholder="ABC-1234" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white uppercase focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">KM Atual</label>
+            <input type="number" id="vehKm" required placeholder="45000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Cor</label>
+            <input type="text" id="vehCor" required placeholder="Preto" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Chassi</label>
+            <input type="text" id="vehChassi" placeholder="9BWZZZ377VT00000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white uppercase focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">RENAVAM</label>
+            <input type="text" id="vehRenavam" placeholder="00123456789" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <!-- PRICING SECTION -->
+        <div class="border-t border-slate-800 pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Preço de Compra (Custo)</label>
+            <input type="number" id="vehCusto" required placeholder="100000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-bold focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Gastos com Oficina/Prep.</label>
+            <input type="number" id="vehPrep" required placeholder="2000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-rose-400 font-bold focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Ref. Tabela FIPE</label>
+            <input type="number" id="vehFipe" required placeholder="115000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sky-400 font-bold focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Preço de Venda Anunciado</label>
+            <input type="number" id="vehPrecoVenda" required placeholder="118000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-extrabold focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Status no Pátio</label>
+            <select id="vehStatus" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+              <option value="Disponível">Disponível</option>
+              <option value="Reservado">Reservado</option>
+              <option value="Em Preparação">Em Preparação</option>
+              <option value="Vendido">Vendido</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
+          <span class="text-slate-400">Margem Estimada de Lucro:</span>
+          <span id="vehMarginPreview" class="font-bold text-emerald-400">R$ 0,00 (0%)</span>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalVehicle')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium">Cancelar</button>
+          <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-5 py-2 rounded-xl transition-all">Salvar Veículo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MODAL: REGISTER SALE -->
+  <div id="modalSale" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-handshake text-emerald-400"></i>
+          Registrar Venda de Veículo
+        </h3>
+        <button onclick="closeModal('modalSale')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="confirmSale(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Selecione o Veículo</label>
+          <select id="saleVehSelect" required onchange="onSaleVehicleChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+            <!-- Dynamic Vehicles -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Nome do Comprador</label>
+            <input type="text" id="saleClientName" required placeholder="Nome do Cliente" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">CPF / CNPJ</label>
+            <input type="text" id="saleClientCpf" required placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Vendedor Responsável</label>
+            <select id="saleSellerSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+              <!-- Dynamic Sellers -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Forma de Pagamento</label>
+            <select id="salePayMethod" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+              <option value="Financiamento Bancário">Financiamento Bancário</option>
+              <option value="À Vista / Pix">À Vista / Pix</option>
+              <option value="Troca + Troco">Troca + Diferença</option>
+              <option value="Consórcio">Consórcio Contemplado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Valor Final Fechado (R$)</label>
+            <input type="number" id="saleFinalPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-bold focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Comissão do Vendedor (%)</label>
+            <input type="number" step="0.1" id="saleCommissionPerc" value="1.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-amber-400 font-bold focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-[11px] text-slate-400">
+          A confirmação irá alterar automaticamente o status do carro para <strong class="text-emerald-400">Vendido</strong> e gerar a receita no Fluxo de Caixa.
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalSale')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium">Cancelar</button>
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-5 py-2 rounded-xl transition-all">Concluir Venda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. MODAL: ADD / EDIT MEMBER -->
+  <div id="modalMember" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-sky-400"></i>
+          Cadastrar Novo Membro
+        </h3>
+        <button onclick="closeModal('modalMember')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveMember(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Nome Completo</label>
+          <input type="text" id="memName" required placeholder="Nome do Funcionário" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">E-mail de Acesso</label>
+          <input type="email" id="memEmail" required placeholder="email@autodrive.com.br" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Nível de Permissão (Cargo)</label>
+          <select id="memRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+            <option value="vendedor">Membro Vendedor (Restrito)</option>
+            <option value="admin">Gerente Administrador</option>
+            <option value="super_admin">Super Administrador (Dono)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <input type="checkbox" id="memReq2fa" class="rounded bg-slate-950 border-slate-800 text-sky-600 focus:ring-sky-500" checked>
+          <label for="memReq2fa" class="text-slate-300">Exigir Autenticação em 2 Fatores (2FA)</label>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalMember')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium">Cancelar</button>
+          <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-5 py-2 rounded-xl transition-all">Salvar Membro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. MODAL: NEW TRANSACTION -->
+  <div id="modalTransaction" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-sky-400"></i>
+          Novo Lançamento Financeiro
+        </h3>
+        <button onclick="closeModal('modalTransaction')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveTransaction(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Tipo de Lançamento</label>
+          <select id="trxType" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+            <option value="despesa">Despesa (Saída)</option>
+            <option value="receita">Receita (Entrada)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Descrição</label>
+          <input type="text" id="trxDesc" required placeholder="Ex: Preparação de lataria, Aluguel do pátio" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Valor (R$)</label>
+            <input type="number" id="trxAmount" required placeholder="1500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-medium mb-1">Forma de Pagamento</label>
+            <select id="trxMethod" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+              <option value="Pix / Transferência">Pix / Transferência</option>
+              <option value="Boleto Bancário">Boleto Bancário</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalTransaction')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white font-medium">Cancelar</button>
+          <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-5 py-2 rounded-xl transition-all">Lançar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT LOGIC & STATE ENGINE -->
+  <script>
+    // --- INITIAL APP STATE & STORAGE HANDLER ---
+    const STORAGE_KEY = 'autodrive_dms_data_v1';
+
+    const defaultInitialState = {
+      currentUser: {
+        id: 'usr_1',
+        name: 'Carlos Silveira',
+        email: 'carlos@autodrive.com.br',
+        role: 'super_admin' // 'super_admin', 'admin', 'vendedor'
+      },
+      securitySettings: {
+        restrictIp: true,
+        require2FA: true,
+        restrictHours: true,
+        corporateIp: '189.45.210.88'
+      },
+      members: [
+        { id: 'usr_1', name: 'Carlos Silveira', email: 'carlos@autodrive.com.br', role: 'super_admin', req2fa: true, active: true, lastAccess: 'Hoje às 14:10' },
+        { id: 'usr_2', name: 'Roberto Mendes', email: 'roberto@autodrive.com.br', role: 'admin', req2fa: true, active: true, lastAccess: 'Hoje às 11:45' },
+        { id: 'usr_3', name: 'Juliana Lima', email: 'juliana@autodrive.com.br', role: 'vendedor', req2fa: false, active: true, lastAccess: 'Hoje às 09:30' },
+        { id: 'usr_4', name: 'Marcos Santos', email: 'marcos@autodrive.com.br', role: 'vendedor', req2fa: false, active: true, lastAccess: 'Ontem às 17:20' }
+      ],
+      vehicles: [
+        {
+          id: 'veh_1',
+          marca: 'Toyota',
+          modelo: 'Corolla Cross XRE 2.0',
+          ano: 2023,
+          placa: 'QWE-4A12',
+          km: 24000,
+          cor: 'Branco Perolizado',
+          chassi: '9BRBL3HE8NZ019234',
+          renavam: '00891234561',
+          custo: 126000,
+          prep: 2500,
+          fipe: 142500,
+          precoVenda: 145900,
+          status: 'Disponível',
+          diasPatio: 14,
+          dataEntrada: '2026-11-08'
+        },
+        {
+          id: 'veh_2',
+          marca: 'Jeep',
+          modelo: 'Compass Limited 1.3 Turbo',
+          ano: 2022,
+          placa: 'RTY-8B34',
+          km: 38000,
+          cor: 'Preto Carbon',
+          chassi: '98884930219483921',
+          renavam: '00982341234',
+          custo: 121000,
+          prep: 3200,
+          fipe: 138000,
+          precoVenda: 139900,
+          status: 'Disponível',
+          diasPatio: 28,
+          dataEntrada: '2026-10-25'
+        },
+        {
+          id: 'veh_3',
+          marca: 'Chevrolet',
+          modelo: 'Onix Premier 1.0 Turbo',
+          ano: 2024,
+          placa: 'UIO-9C56',
+          km: 12000,
+          cor: 'Cinza Drake',
+          chassi: '9BG14893029103948',
+          renavam: '00773412998',
+          custo: 78500,
+          prep: 1200,
+          fipe: 89000,
+          precoVenda: 88500,
+          status: 'Reservado',
+          diasPatio: 8,
+          dataEntrada: '2026-11-14'
+        },
+        {
+          id: 'veh_4',
+          marca: 'BMW',
+          modelo: '320i M Sport 2.0 Turbo',
+          ano: 2022,
+          placa: 'PAS-1D78',
+          km: 31000,
+          cor: 'Azul Phytonic',
+          chassi: 'WBA3A51080F192384',
+          renavam: '00551239988',
+          custo: 225000,
+          prep: 4500,
+          fipe: 255000,
+          precoVenda: 259900,
+          status: 'Disponível',
+          diasPatio: 42,
+          dataEntrada: '2026-10-11'
+        },
+        {
+          id: 'veh_5',
+          marca: 'Volkswagen',
+          modelo: 'Nivus Highline 200 TSI',
+          ano: 2023,
+          placa: 'JKL-5F12',
+          km: 19500,
+          cor: 'Cinza Moonstone',
+          chassi: '9BW84930219403921',
+          renavam: '00441239981',
+          custo: 101000,
+          prep: 1500,
+          fipe: 115000,
+          precoVenda: 116800,
+          status: 'Em Preparação',
+          diasPatio: 5,
+          dataEntrada: '2026-11-17'
+        },
+        {
+          id: 'veh_6',
+          marca: 'Honda',
+          modelo: 'Civic Touring 1.5 Turbo',
+          ano: 2021,
+          placa: 'FGH-3E90',
+          km: 52000,
+          cor: 'Prata Platinum',
+          chassi: '93HFC1670MZ109283',
+          renavam: '00331928475',
+          custo: 112000,
+          prep: 1800,
+          fipe: 129000,
+          precoVenda: 131000,
+          status: 'Vendido',
+          diasPatio: 19,
+          dataEntrada: '2026-10-20'
+        }
+      ],
+      sales: [
+        {
+          id: 'trx_1',
+          date: '2026-11-18',
+          type: 'receita',
+          desc: 'Venda de Veículo: Honda Civic Touring 1.5 Turbo',
+          responsible: 'Juliana Lima',
+          method: 'Financiamento Bancário',
+          amount: 131000
+        },
+        {
+          id: 'trx_2',
+          date: '2026-11-18',
+          type: 'despesa',
+          desc: 'Comissão de Venda: Juliana Lima (Honda Civic)',
+          responsible: 'Carlos Silveira',
+          method: 'Pix / Transferência',
+          amount: 1965
+        },
+        {
+          id: 'trx_3',
+          date: '2026-11-15',
+          type: 'despesa',
+          desc: 'Serviço de Martelinho & Pintura (Nivus & Compass)',
+          responsible: 'Roberto Mendes',
+          method: 'Boleto Bancário',
+          amount: 4700
+        }
+      ],
+      logs: [
+        { id: 'log_1', timestamp: '2026-11-22 14:05', user: 'Carlos Silveira', role: 'Super Admin', action: 'Login efetuado com sucesso via 2FA', ip: '189.45.210.88', status: 'Sucesso' },
+        { id: 'log_2', timestamp: '2026-11-22 13:40', user: 'Juliana Lima', role: 'Vendedor', action: 'Consulta de estoque e cotação FIPE', ip: '189.45.210.88', status: 'Info' },
+        { id: 'log_3', timestamp: '2026-11-21 16:20', user: 'Roberto Mendes', role: 'Gerente ADM', action: 'Atualizou valor de venda do Toyota Corolla Cross', ip: '189.45.210.88', status: 'Aviso' }
+      ]
+    };
+
+    let appData = loadState();
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      }
+      return defaultInitialState;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    // --- CHART INSTANCES ---
+    let chartComparisonInstance = null;
+    let chartStatusInstance = null;
+
+    // --- INIT APP ON DOM LOAD ---
+    window.onload = function() {
+      updateUserUI();
+      renderDashboard();
+      renderInventory();
+      renderSales();
+      renderMembers();
+      renderSecurityLogs();
+      startTotpTimer();
+
+      // Ensure responsiveness for charts
+      window.addEventListener('resize', () => {
+        if (chartComparisonInstance) chartComparisonInstance.resize();
+        if (chartStatusInstance) chartStatusInstance.resize();
+      });
+    };
+
+    // --- TAB SWITCHING LOGIC ---
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('bg-sky-600', 'text-white', 'shadow-lg', 'shadow-sky-600/20');
+        el.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-slate-200');
+      });
+
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      const targetNav = document.getElementById(`nav-${tabName}`);
+
+      if (targetTab && targetNav) {
+        targetTab.classList.remove('hidden');
+        targetNav.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-slate-200');
+        targetNav.classList.add('bg-sky-600', 'text-white', 'shadow-lg', 'shadow-sky-600/20');
+      }
+
+      if (tabName === 'dashboard') {
+        renderDashboard();
+      }
+    }
+
+    // --- USER ROLE SWITCHING & RBAC LOGIC ---
+    function switchUserRole(role) {
+      if (role === 'super_admin') {
+        appData.currentUser = { id: 'usr_1', name: 'Carlos Silveira', email: 'carlos@autodrive.com.br', role: 'super_admin' };
+      } else if (role === 'admin') {
+        appData.currentUser = { id: 'usr_2', name: 'Roberto Mendes', email: 'roberto@autodrive.com.br', role: 'admin' };
+      } else {
+        appData.currentUser = { id: 'usr_3', name: 'Juliana Lima', email: 'juliana@autodrive.com.br', role: 'vendedor' };
+      }
+
+      saveState();
+      updateUserUI();
+      renderDashboard();
+      renderInventory();
+      renderMembers();
+      
+      logAction('Troca de Perfil', `Perfil alternado para ${appData.currentUser.role.toUpperCase()}`);
+    }
+
+    function updateUserUI() {
+      const user = appData.currentUser;
+      const initials = user.name.split(' ').map(n => n[0]).join('');
+      
+      document.getElementById('userAvatar').innerText = initials;
+      document.getElementById('userName').innerText = user.name;
+      
+      const roleBadges = {
+        super_admin: 'Super Admin (Dono)',
+        admin: 'Gerente ADM',
+        vendedor: 'Membro Vendedor'
+      };
+      document.getElementById('userRoleBadge').innerText = roleBadges[user.role] || user.role;
+
+      // Update role buttons highlight
+      ['super_admin', 'admin', 'vendedor'].forEach(r => {
+        const btn = document.getElementById(`roleBtn-${r}`);
+        if (btn) {
+          if (r === user.role) {
+            btn.className = 'px-2.5 py-1 rounded-lg font-bold bg-sky-600 text-white shadow-sm';
+          } else {
+            btn.className = 'px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white hover:bg-slate-700/50';
+          }
+        }
+      });
+
+      // Show/Hide Seller Banner
+      const sellerNotice = document.getElementById('sellerNoticeBanner');
+      if (user.role === 'vendedor') {
+        sellerNotice.classList.remove('hidden');
+      } else {
+        sellerNotice.classList.add('hidden');
+      }
+
+      // Hide or Blur Admin Only Elements
+      const isSeller = user.role === 'vendedor';
+      document.querySelectorAll('.adm-only').forEach(el => {
+        if (isSeller) {
+          el.classList.add('hidden');
+        } else {
+          el.classList.remove('hidden');
+        }
+      });
+    }
+
+    function simulateLogout() {
+      alert("Simulação de Logout. Você será redirecionado para o perfil de Super Admin.");
+      switchUserRole('super_admin');
+    }
+
+    // --- DASHBOARD RENDER & FIPE CALCULATIONS ---
+    function renderDashboard() {
+      const vehicles = appData.vehicles;
+      const isSeller = appData.currentUser.role === 'vendedor';
+
+      // Computations
+      let totalVenda = 0;
+      let totalCusto = 0;
+      let totalFipe = 0;
+      let dispCount = 0;
+      let resCount = 0;
+
+      vehicles.forEach(v => {
+        totalVenda += Number(v.precoVenda || 0);
+        totalCusto += Number(v.custo || 0) + Number(v.prep || 0);
+        totalFipe += Number(v.fipe || 0);
+        if (v.status === 'Disponível') dispCount++;
+        if (v.status === 'Reservado') resCount++;
+      });
+
+      const totalCarros = vehicles.length;
+      const lucroProjetado = totalVenda - totalCusto;
+      const margemPerc = totalCusto > 0 ? ((lucroProjetado / totalCusto) * 100).toFixed(1) : 0;
+      const ticketMedio = totalCarros > 0 ? (totalVenda / totalCarros) : 0;
+      const diffFipePerc = totalFipe > 0 ? (((totalVenda - totalFipe) / totalFipe) * 100).toFixed(1) : 0;
+
+      // Update KPI DOM
+      document.getElementById('kpiTotalVenda').innerText = formatMoney(totalVenda);
+      
+      if (isSeller) {
+        document.getElementById('kpiTotalCusto').innerText = '🔒 Restrito';
+        document.getElementById('kpiLucroProjetado').innerText = '🔒 Restrito';
+        document.getElementById('kpiMargemPerc').innerText = 'Acesso apenas ADM';
+      } else {
+        document.getElementById('kpiTotalCusto').innerText = formatMoney(totalCusto);
+        document.getElementById('kpiLucroProjetado').innerText = formatMoney(lucroProjetado);
+        document.getElementById('kpiMargemPerc').innerText = `${margemPerc}% margem média`;
+      }
+
+      document.getElementById('kpiTotalCarros').innerText = totalCarros;
+      document.getElementById('kpiStatusCarros').innerText = `${dispCount} disp. | ${resCount} res.`;
+      document.getElementById('kpiTicketMedio').innerText = formatMoney(ticketMedio);
+      document.getElementById('kpiIndiceFipe').innerText = `${diffFipePerc >= 0 ? '+' : ''}${diffFipePerc}%`;
+
+      // Render Charts & Table
+      renderCharts(vehicles);
+      renderFipeHighlightsTable(vehicles);
+    }
+
+    function renderFipeHighlightsTable(vehicles) {
+      const tbody = document.getElementById('fipeHighlightsTable');
+      tbody.innerHTML = '';
+
+      vehicles.slice(0, 5).forEach(v => {
+        const diffVal = v.precoVenda - v.fipe;
+        const diffPerc = ((diffVal / v.fipe) * 100).toFixed(1);
+
+        let badgeClass = 'bg-slate-800 text-slate-300';
+        let statusLabel = 'Na Média FIPE';
+
+        if (diffPerc > 2) {
+          badgeClass = 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400';
+          statusLabel = 'Acima da FIPE (+' + diffPerc + '%)';
+        } else if (diffPerc < -1) {
+          badgeClass = 'bg-rose-500/10 border border-rose-500/30 text-rose-400';
+          statusLabel = 'Abaixo da FIPE (' + diffPerc + '%)';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+        tr.innerHTML = `
+          <td class="p-3 font-semibold text-white">${v.marca} ${v.modelo}</td>
+          <td class="p-3 text-slate-400">${v.ano}</td>
+          <td class="p-3 font-bold text-white">${formatMoney(v.precoVenda)}</td>
+          <td class="p-3 text-sky-400 font-mono">${formatMoney(v.fipe)}</td>
+          <td class="p-3 font-mono ${diffVal >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${diffVal >= 0 ? '+' : ''}${formatMoney(diffVal)}
+          </td>
+          <td class="p-3">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${badgeClass}">
+              ${statusLabel}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCharts(vehicles) {
+      // 1. Comparison Bar Chart
+      const labels = vehicles.map(v => v.modelo.substring(0, 15) + '...');
+      const salesPrices = vehicles.map(v => v.precoVenda);
+      const fipePrices = vehicles.map(v => v.fipe);
+
+      const ctxComp = document.getElementById('chartPriceComparison').getContext('2d');
+      if (chartComparisonInstance) chartComparisonInstance.destroy();
+
+      chartComparisonInstance = new Chart(ctxComp, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Preço Anunciado (Venda)',
+              data: salesPrices,
+              backgroundColor: '#0284c7',
+              borderRadius: 6
+            },
+            {
+              label: 'Referência Tabela FIPE',
+              data: fipePrices,
+              backgroundColor: '#38bdf8',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(51, 65, 85, 0.3)' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(51, 65, 85, 0.3)' } }
+          }
+        }
+      });
+
+      // 2. Status Breakdown Doughnut Chart
+      const statusCounts = { 'Disponível': 0, 'Reservado': 0, 'Em Preparação': 0, 'Vendido': 0 };
+      vehicles.forEach(v => {
+        if (statusCounts[v.status] !== undefined) statusCounts[v.status]++;
+      });
+
+      const ctxStatus = document.getElementById('chartStockStatus').getContext('2d');
+      if (chartStatusInstance) chartStatusInstance.destroy();
+
+      chartStatusInstance = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(statusCounts),
+          datasets: [{
+            data: Object.values(statusCounts),
+            backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#64748b'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // --- MARKET FIPE SYNC SIMULATOR ---
+    function openMarketSyncModal() {
+      document.getElementById('modalMarketSync').classList.remove('hidden');
+    }
+
+    function setMarketPreset(percent) {
+      document.getElementById('inputFipePercent').value = percent;
+      calculateMarketImpactPreview();
+    }
+
+    function calculateMarketImpactPreview() {
+      const perc = parseFloat(document.getElementById('inputFipePercent').value) || 0;
+      let totalDiff = 0;
+
+      appData.vehicles.forEach(v => {
+        const newFipe = v.fipe * (1 + (perc / 100));
+        totalDiff += (newFipe - v.fipe);
+      });
+
+      const previewEl = document.getElementById('marketImpactPreview');
+      previewEl.innerText = `${totalDiff >= 0 ? '+' : ''}${formatMoney(totalDiff)} na referência total`;
+      previewEl.className = totalDiff >= 0 ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
+    }
+
+    document.getElementById('inputFipePercent').addEventListener('input', calculateMarketImpactPreview);
+
+    function applyMarketSync() {
+      const perc = parseFloat(document.getElementById('inputFipePercent').value) || 0;
+
+      appData.vehicles.forEach(v => {
+        v.fipe = Math.round(v.fipe * (1 + (perc / 100)));
+      });
+
+      saveState();
+      renderDashboard();
+      renderInventory();
+      closeModal('modalMarketSync');
+
+      logAction('Mercado FIPE', `Sincronização de mercado aplicada: ${perc >= 0 ? '+' : ''}${perc}% na Tabela FIPE`);
+      alert(`Sincronização concluída! A Tabela FIPE de todo o estoque foi atualizada em ${perc}%.`);
+    }
+
+    // --- DMS INVENTORY MANAGEMENT (CRUD) ---
+    function renderInventory() {
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = '';
+
+      const searchTerm = document.getElementById('inventorySearch').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+      const brandFilter = document.getElementById('filterBrand').value;
+
+      const isSeller = appData.currentUser.role === 'vendedor';
+
+      // Populate brand options dynamically
+      const brandSelect = document.getElementById('filterBrand');
+      const uniqueBrands = [...new Set(appData.vehicles.map(v => v.marca))];
+      brandSelect.innerHTML = '<option value="todas">Todas as Marcas</option>';
+      uniqueBrands.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.innerText = b;
+        if (b === brandFilter) opt.selected = true;
+        brandSelect.appendChild(opt);
+      });
+
+      const filtered = appData.vehicles.filter(v => {
+        const matchSearch = v.modelo.toLowerCase().includes(searchTerm) ||
+                            v.marca.toLowerCase().includes(searchTerm) ||
+                            v.placa.toLowerCase().includes(searchTerm) ||
+                            (v.chassi && v.chassi.toLowerCase().includes(searchTerm));
+        const matchStatus = statusFilter === 'todos' || v.status === statusFilter;
+        const matchBrand = brandFilter === 'todas' || v.marca === brandFilter;
+
+        return matchSearch && matchStatus && matchBrand;
+      });
+
+      filtered.forEach(v => {
+        const totalCusto = Number(v.custo) + Number(v.prep);
+        const lucroEst = Number(v.precoVenda) - totalCusto;
+        const margemPerc = totalCusto > 0 ? ((lucroEst / totalCusto) * 100).toFixed(1) : 0;
+
+        let statusClass = 'bg-slate-800 text-slate-300';
+        if (v.status === 'Disponível') statusClass = 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400';
+        if (v.status === 'Reservado') statusClass = 'bg-amber-500/10 border border-amber-500/30 text-amber-400';
+        if (v.status === 'Em Preparação') statusClass = 'bg-sky-500/10 border border-sky-500/30 text-sky-400';
+        if (v.status === 'Vendido') statusClass = 'bg-slate-800 text-slate-500 line-through';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+        tr.innerHTML = `
+          <td class="p-3.5">
+            <div class="font-bold text-white text-sm">${v.marca} ${v.modelo}</div>
+            <div class="text-[11px] text-slate-400">Ano: ${v.ano} • KM: ${Number(v.km).toLocaleString('pt-BR')} • Cor: ${v.cor}</div>
+          </td>
+          <td class="p-3.5 font-mono">
+            <div class="text-sky-400 font-semibold">${v.placa}</div>
+            <div class="text-[10px] text-slate-500 truncate w-28" title="${v.chassi}">CH: ${v.chassi || 'N/D'}</div>
+          </td>
+          <td class="p-3.5">
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">
+              ${v.diasPatio} dias
+            </span>
+          </td>
+          <td class="p-3.5 adm-only font-mono">
+            ${isSeller ? '<span class="text-slate-500">🔒 Oculto</span>' : `
+              <div class="text-slate-200 font-semibold">${formatMoney(totalCusto)}</div>
+              <div class="text-[10px] text-slate-500">Compra: ${formatMoney(v.custo)} | Prep: ${formatMoney(v.prep)}</div>
+            `}
+          </td>
+          <td class="p-3.5 font-mono text-sky-400">
+            ${formatMoney(v.fipe)}
+          </td>
+          <td class="p-3.5 font-mono font-extrabold text-white text-sm">
+            ${formatMoney(v.precoVenda)}
+          </td>
+          <td class="p-3.5 adm-only font-mono">
+            ${isSeller ? '<span class="text-slate-500">🔒 Oculto</span>' : `
+              <div class="font-bold ${lucroEst >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${formatMoney(lucroEst)}</div>
+              <div class="text-[10px] text-slate-500">${margemPerc}% margem</div>
+            `}
+          </td>
+          <td class="p-3.5">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${statusClass}">
+              ${v.status}
+            </span>
+          </td>
+          <td class="p-3.5 text-right space-x-1">
+            ${v.status !== 'Vendido' ? `
+              <button onclick="openSellDirectModal('${v.id}')" title="Vender Carro" class="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all">
+                <i class="fa-solid fa-handshake"></i>
+              </button>
+            ` : ''}
+            <button onclick="openEditVehicleModal('${v.id}')" title="Editar Veículo" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            ${!isSeller ? `
+              <button onclick="deleteVehicle('${v.id}')" title="Excluir" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-600 hover:text-white transition-all">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : ''}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      updateUserUI();
+    }
+
+    function openAddVehicleModal() {
+      document.getElementById('modalVehicleTitle').innerText = 'Cadastrar Novo Veículo no Pátio';
+      document.getElementById('formVehicle').reset();
+      document.getElementById('vehId').value = '';
+      document.getElementById('modalVehicle').classList.remove('hidden');
+    }
+
+    function openEditVehicleModal(id) {
+      const v = appData.vehicles.find(item => item.id === id);
+      if (!v) return;
+
+      document.getElementById('modalVehicleTitle').innerText = 'Editar Registro do Veículo';
+      document.getElementById('vehId').value = v.id;
+      document.getElementById('vehMarca').value = v.marca;
+      document.getElementById('vehModelo').value = v.modelo;
+      document.getElementById('vehAno').value = v.ano;
+      document.getElementById('vehPlaca').value = v.placa;
+      document.getElementById('vehKm').value = v.km;
+      document.getElementById('vehCor').value = v.cor;
+      document.getElementById('vehChassi').value = v.chassi || '';
+      document.getElementById('vehRenavam').value = v.renavam || '';
+      document.getElementById('vehCusto').value = v.custo;
+      document.getElementById('vehPrep').value = v.prep;
+      document.getElementById('vehFipe').value = v.fipe;
+      document.getElementById('vehPrecoVenda').value = v.precoVenda;
+      document.getElementById('vehStatus').value = v.status;
+
+      document.getElementById('modalVehicle').classList.remove('hidden');
+    }
+
+    function saveVehicle(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('vehId').value;
+      const vehData = {
+        id: id || 'veh_' + Date.now(),
+        marca: document.getElementById('vehMarca').value,
+        modelo: document.getElementById('vehModelo').value,
+        ano: parseInt(document.getElementById('vehAno').value),
+        placa: document.getElementById('vehPlaca').value.toUpperCase(),
+        km: parseInt(document.getElementById('vehKm').value),
+        cor: document.getElementById('vehCor').value,
+        chassi: document.getElementById('vehChassi').value.toUpperCase(),
+        renavam: document.getElementById('vehRenavam').value,
+        custo: parseFloat(document.getElementById('vehCusto').value),
+        prep: parseFloat(document.getElementById('vehPrep').value),
+        fipe: parseFloat(document.getElementById('vehFipe').value),
+        precoVenda: parseFloat(document.getElementById('vehPrecoVenda').value),
+        status: document.getElementById('vehStatus').value,
+        diasPatio: id ? (appData.vehicles.find(x => x.id === id)?.diasPatio || 1) : 1
+      };
+
+      if (id) {
+        const index = appData.vehicles.findIndex(x => x.id === id);
+        if (index !== -1) appData.vehicles[index] = vehData;
+        logAction('Estoque', `Veículo atualizado: ${vehData.marca} ${vehData.modelo} (${vehData.placa})`);
+      } else {
+        appData.vehicles.unshift(vehData);
+        logAction('Estoque', `Novo veículo cadastrado: ${vehData.marca} ${vehData.modelo} (${vehData.placa})`);
+      }
+
+      saveState();
+      renderInventory();
+      renderDashboard();
+      closeModal('modalVehicle');
+    }
+
+    function deleteVehicle(id) {
+      if (!confirm("Tem certeza que deseja remover este veículo do estoque?")) return;
+
+      const veh = appData.vehicles.find(x => x.id === id);
+      appData.vehicles = appData.vehicles.filter(x => x.id !== id);
+
+      saveState();
+      renderInventory();
+      renderDashboard();
+
+      if (veh) logAction('Estoque', `Veículo removido do sistema: ${veh.marca} ${veh.modelo}`);
+    }
+
+    // --- SALES & FINANCIAL MODULE ---
+    function renderSales() {
+      const tbody = document.getElementById('salesTableBody');
+      tbody.innerHTML = '';
+
+      let receitaTotal = 0;
+      let despesasTotal = 0;
+      let comissoesTotal = 0;
+      let vendasCount = 0;
+
+      appData.sales.forEach(s => {
+        if (s.type === 'receita') {
+          receitaTotal += Number(s.amount);
+          vendasCount++;
+        } else {
+          despesasTotal += Number(s.amount);
+          if (s.desc.includes('Comissão')) comissoesTotal += Number(s.amount);
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+        tr.innerHTML = `
+          <td class="p-3.5 text-slate-400 font-mono">${s.date}</td>
+          <td class="p-3.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.type === 'receita' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+              ${s.type.toUpperCase()}
+            </span>
+          </td>
+          <td class="p-3.5 font-medium text-white">${s.desc}</td>
+          <td class="p-3.5 text-slate-300">${s.responsible}</td>
+          <td class="p-3.5 text-slate-400">${s.method}</td>
+          <td class="p-3.5 text-right font-mono font-bold ${s.type === 'receita' ? 'text-emerald-400' : 'text-rose-400'}">
+            ${s.type === 'receita' ? '+' : '-'}${formatMoney(s.amount)}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const saldoOperacional = receitaTotal - despesasTotal;
+
+      document.getElementById('finReceitaTotal').innerText = formatMoney(receitaTotal);
+      document.getElementById('finDespesasTotal').innerText = formatMoney(despesasTotal);
+      document.getElementById('finSaldoOperacional').innerText = formatMoney(saldoOperacional);
+      document.getElementById('finComissoesTotal').innerText = formatMoney(comissoesTotal);
+      document.getElementById('finVendasCount').innerText = `${vendasCount} vendas efetuadas`;
+    }
+
+    function openRegisterSaleModal() {
+      const selectVeh = document.getElementById('saleVehSelect');
+      selectVeh.innerHTML = '';
+
+      const availableVehicles = appData.vehicles.filter(v => v.status !== 'Vendido');
+
+      if (availableVehicles.length === 0) {
+        alert("Não há veículos disponíveis para venda no momento.");
+        return;
+      }
+
+      availableVehicles.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.innerText = `${v.marca} ${v.modelo} (${v.placa}) - Anunciado: ${formatMoney(v.precoVenda)}`;
+        selectVeh.appendChild(opt);
+      });
+
+      // Sellers list
+      const selectSeller = document.getElementById('saleSellerSelect');
+      selectSeller.innerHTML = '';
+      appData.members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.name;
+        opt.innerText = `${m.name} (${m.role})`;
+        selectSeller.appendChild(opt);
+      });
+
+      onSaleVehicleChange();
+      document.getElementById('modalSale').classList.remove('hidden');
+    }
+
+    function openSellDirectModal(vehId) {
+      openRegisterSaleModal();
+      document.getElementById('saleVehSelect').value = vehId;
+      onSaleVehicleChange();
+    }
+
+    function onSaleVehicleChange() {
+      const vehId = document.getElementById('saleVehSelect').value;
+      const veh = appData.vehicles.find(v => v.id === vehId);
+      if (veh) {
+        document.getElementById('saleFinalPrice').value = veh.precoVenda;
+      }
+    }
+
+    function confirmSale(e) {
+      e.preventDefault();
+
+      const vehId = document.getElementById('saleVehSelect').value;
+      const veh = appData.vehicles.find(v => v.id === vehId);
+      if (!veh) return;
+
+      const clientName = document.getElementById('saleClientName').value;
+      const sellerName = document.getElementById('saleSellerSelect').value;
+      const payMethod = document.getElementById('salePayMethod').value;
+      const finalPrice = parseFloat(document.getElementById('saleFinalPrice').value);
+      const commPerc = parseFloat(document.getElementById('saleCommissionPerc').value) || 0;
+
+      // Update vehicle status
+      veh.status = 'Vendido';
+
+      // Financial Receita Entry
+      const saleTrx = {
+        id: 'trx_' + Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        type: 'receita',
+        desc: `Venda de Veículo: ${veh.marca} ${veh.modelo} (Cliente: ${clientName})`,
+        responsible: sellerName,
+        method: payMethod,
+        amount: finalPrice
+      };
+      appData.sales.unshift(saleTrx);
+
+      // Commission Despesa Entry if applicable
+      if (commPerc > 0) {
+        const commAmount = (finalPrice * commPerc) / 100;
+        appData.sales.unshift({
+          id: 'trx_' + (Date.now() + 1),
+          date: new Date().toISOString().split('T')[0],
+          type: 'despesa',
+          desc: `Comissão de Venda (${commPerc}%): ${sellerName} (${veh.modelo})`,
+          responsible: appData.currentUser.name,
+          method: 'Pix / Transferência',
+          amount: commAmount
+        });
+      }
+
+      saveState();
+      renderInventory();
+      renderDashboard();
+      renderSales();
+      closeModal('modalSale');
+
+      logAction('Venda', `Venda concluída: ${veh.marca} ${veh.modelo} por ${formatMoney(finalPrice)} (Vendedor: ${sellerName})`);
+      alert("Venda concluída com sucesso! O estoque e o financeiro foram atualizados.");
+    }
+
+    function openNewTransactionModal() {
+      document.getElementById('modalTransaction').classList.remove('hidden');
+    }
+
+    function saveTransaction(e) {
+      e.preventDefault();
+
+      const trx = {
+        id: 'trx_' + Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        type: document.getElementById('trxType').value,
+        desc: document.getElementById('trxDesc').value,
+        responsible: appData.currentUser.name,
+        method: document.getElementById('trxMethod').value,
+        amount: parseFloat(document.getElementById('trxAmount').value)
+      };
+
+      appData.sales.unshift(trx);
+      saveState();
+      renderSales();
+      closeModal('modalTransaction');
+
+      logAction('Financeiro', `Novo lançamento registrado: ${trx.desc} (${formatMoney(trx.amount)})`);
+    }
+
+    // --- MEMBERS & RBAC USER MANAGEMENT ---
+    function renderMembers() {
+      const tbody = document.getElementById('membersTableBody');
+      tbody.innerHTML = '';
+
+      const isSuperAdmin = appData.currentUser.role === 'super_admin';
+      document.getElementById('membersCountText').innerText = `${appData.members.length} membros cadastrados`;
+
+      // Hide Add Member button if not Super Admin or Admin
+      const btnAddMem = document.getElementById('btnAddMember');
+      if (btnAddMem) {
+        if (appData.currentUser.role === 'vendedor') {
+          btnAddMem.classList.add('hidden');
+        } else {
+          btnAddMem.classList.remove('hidden');
+        }
+      }
+
+      appData.members.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+        let roleBadge = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+        let roleLabel = 'Membro Vendedor';
+        if (m.role === 'super_admin') {
+          roleBadge = 'bg-sky-500/10 text-sky-400 border border-sky-500/30';
+          roleLabel = 'Super ADM (Dono)';
+        } else if (m.role === 'admin') {
+          roleBadge = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30';
+          roleLabel = 'Gerente ADM';
+        }
+
+        tr.innerHTML = `
+          <td class="p-3.5">
+            <div class="font-bold text-white">${m.name}</div>
+            <div class="text-[10px] text-slate-500 font-mono">ID: ${m.id}</div>
+          </td>
+          <td class="p-3.5 text-slate-300 font-mono">${m.email}</td>
+          <td class="p-3.5">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${roleBadge}">
+              ${roleLabel}
+            </span>
+          </td>
+          <td class="p-3.5">
+            ${m.req2fa ? `
+              <span class="text-emerald-400 text-[11px] font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-lock text-[10px]"></i> 2FA Ativo
+              </span>
+            ` : `
+              <span class="text-slate-500 text-[11px]">Opcional</span>
+            `}
+          </td>
+          <td class="p-3.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${m.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+              ${m.active ? 'ATIVO' : 'BLOQUEADO'}
+            </span>
+          </td>
+          <td class="p-3.5 text-slate-400 text-[11px]">${m.lastAccess || 'Recentemente'}</td>
+          <td class="p-3.5 text-right space-x-1">
+            ${isSuperAdmin ? `
+              <button onclick="toggleMemberRole('${m.id}')" title="Alterar Nível" class="p-1.5 rounded-lg bg-slate-800 text-sky-400 hover:bg-slate-700">
+                <i class="fa-solid fa-user-shield"></i>
+              </button>
+              <button onclick="toggleMemberActive('${m.id}')" title="Ativar/Bloquear" class="p-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700">
+                <i class="fa-solid fa-ban"></i>
+              </button>
+            ` : '<span class="text-slate-600 text-[10px]">Sem Permissão</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openAddMemberModal() {
+      document.getElementById('modalMember').classList.remove('hidden');
+    }
+
+    function saveMember(e) {
+      e.preventDefault();
+
+      const newMember = {
+        id: 'usr_' + Date.now(),
+        name: document.getElementById('memName').value,
+        email: document.getElementById('memEmail').value,
+        role: document.getElementById('memRole').value,
+        req2fa: document.getElementById('memReq2fa').checked,
+        active: true,
+        lastAccess: 'Nunca acessou'
+      };
+
+      appData.members.push(newMember);
+      saveState();
+      renderMembers();
+      closeModal('modalMember');
+
+      logAction('Área de Membros', `Novo usuário cadastrado: ${newMember.name} (${newMember.role})`);
+    }
+
+    function toggleMemberRole(id) {
+      const m = appData.members.find(x => x.id === id);
+      if (!m) return;
+
+      const roles = ['vendedor', 'admin', 'super_admin'];
+      const nextRole = roles[(roles.indexOf(m.role) + 1) % roles.length];
+      m.role = nextRole;
+
+      saveState();
+      renderMembers();
+      logAction('Área de Membros', `Permissão alterada para ${m.name}: Novo nível -> ${m.role}`);
+    }
+
+    function toggleMemberActive(id) {
+      const m = appData.members.find(x => x.id === id);
+      if (!m) return;
+      m.active = !m.active;
+
+      saveState();
+      renderMembers();
+      logAction('Área de Membros', `Status de acesso alterado para ${m.name}: ${m.active ? 'Liberado' : 'Bloqueado'}`);
+    }
+
+    // --- SECURITY & AUDIT LOGS ---
+    function renderSecurityLogs() {
+      const tbody = document.getElementById('auditLogTableBody');
+      tbody.innerHTML = '';
+
+      appData.logs.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+        tr.innerHTML = `
+          <td class="p-3.5 text-slate-400">${log.timestamp}</td>
+          <td class="p-3.5 text-white font-semibold">${log.user}</td>
+          <td class="p-3.5 text-sky-400">${log.role}</td>
+          <td class="p-3.5 text-slate-200 font-sans">${log.action}</td>
+          <td class="p-3.5 text-emerald-400 font-mono text-[11px]">${log.ip}</td>
+          <td class="p-3.5 text-right">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+              ${log.status}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Update Toggles UI
+      document.getElementById('secToggleIp').checked = appData.securitySettings.restrictIp;
+      document.getElementById('secToggle2fa').checked = appData.securitySettings.require2FA;
+      document.getElementById('secToggleHours').checked = appData.securitySettings.restrictHours;
+    }
+
+    function updateSecurityConfig() {
+      appData.securitySettings.restrictIp = document.getElementById('secToggleIp').checked;
+      appData.securitySettings.require2FA = document.getElementById('secToggle2fa').checked;
+      appData.securitySettings.restrictHours = document.getElementById('secToggleHours').checked;
+
+      saveState();
+      logAction('Segurança', 'Configurações de restrição de rede e 2FA atualizadas pelo administrador');
+    }
+
+    function logAction(category, actionText) {
+      const now = new Date();
+      const timestamp = now.toISOString().replace('T', ' ').substring(0, 16);
+
+      const newLog = {
+        id: 'log_' + Date.now(),
+        timestamp: timestamp,
+        user: appData.currentUser.name,
+        role: appData.currentUser.role.toUpperCase(),
+        action: `[${category}] ${actionText}`,
+        ip: appData.securitySettings.corporateIp || '189.45.210.88',
+        status: 'Auditado'
+      };
+
+      appData.logs.unshift(newLog);
+      if (appData.logs.length > 50) appData.logs.pop();
+
+      saveState();
+      renderSecurityLogs();
+    }
+
+    function simulateLogAction(cat, msg) {
+      logAction(cat, msg);
+      alert("Ação auditada e registrada no log de segurança!");
+    }
+
+    // --- TOTP 2FA SIMULATOR ---
+    let totpSeconds = 30;
+    function startTotpTimer() {
+      setInterval(() => {
+        totpSeconds--;
+        if (totpSeconds <= 0) {
+          generateNewTotp();
+          totpSeconds = 30;
+        }
+        document.getElementById('totpTimer').innerText = `${totpSeconds}s`;
+      }, 1000);
+    }
+
+    function generateNewTotp() {
+      const code = Math.floor(100000 + Math.random() * 900000);
+      const formatted = String(code).replace(/(\d{3})(\d{3})/, '$1 $2');
+      document.getElementById('totpCodeDisplay').innerText = formatted;
+      totpSeconds = 30;
+    }
+
+    // --- HELPER UTILITIES ---
+    function formatMoney(val) {
+      return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
